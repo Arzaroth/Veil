@@ -6,6 +6,7 @@ import Quickshell.Wayland
 import qs.Commons
 import qs.Commons as Commons
 import "FingerprintModel.js" as FingerprintModel
+import "Model.js" as Model
 
 Item {
   id: root
@@ -99,7 +100,7 @@ Item {
   function queueSessionLock() {
     pendingSessionLock = true
     if (!sessionLockStabilizeTimer.running) logEvent("lock-pending: screen-stabilizing")
-    sessionLockStabilizeTimer.interval = Date.now() - screensChangedAtMs < 2000 ? 500 : 150
+    sessionLockStabilizeTimer.interval = Model.stabilizeDelayMs(Date.now(), screensChangedAtMs)
     sessionLockStabilizeTimer.restart()
     if (!pendingSessionLockTimer.running) pendingSessionLockTimer.start()
   }
@@ -258,12 +259,10 @@ Item {
     snapshotEpoch += 1
     snapshotFiles = ({})
     if (snapshotProc.running) return
-    var names = []
-    var screens = Quickshell.screens || []
-    for (var i = 0; i < screens.length; i++) if (screens[i] && screens[i].name) names.push(screens[i].name)
+    var names = Model.screenNames(Quickshell.screens)
     if (names.length === 0) return
     snapshotProc.epoch = snapshotEpoch
-    snapshotProc.command = [pluginDir + "/bin/snapshot", "capture", String(snapshotEpoch)].concat(names)
+    snapshotProc.command = Model.snapshotCommand(pluginDir, snapshotEpoch, names)
     snapshotProc.running = true
   }
 
@@ -692,12 +691,7 @@ Item {
         if (!root.lockRequested) cleanSnapshotProc.running = true
         return
       }
-      var files = {}
-      snapshotOutput.text.split("\n").forEach(function(line) {
-        var parts = line.split("\t")
-        if (parts.length === 2 && parts[1].length > 0) files[parts[0]] = parts[1]
-      })
-      root.snapshotFiles = files
+      root.snapshotFiles = Model.parseSnapshots(snapshotOutput.text)
     }
   }
 
@@ -715,7 +709,7 @@ Item {
 
   Timer {
     id: unlockFadeTimer
-    interval: 450
+    interval: Model.UNLOCK_FADE_MS
     repeat: false
     onTriggered: root.releaseLock()
   }
@@ -881,7 +875,7 @@ Item {
 
   Timer {
     id: sessionLockStabilizeTimer
-    interval: 150
+    interval: Model.STABILIZE_MS
     repeat: false
     onTriggered: root.requestSessionLock()
   }
@@ -923,7 +917,7 @@ Item {
       root.knownScreenCount = screens
       root.screensChangedAtMs = Date.now()
       if (sessionLockStabilizeTimer.running) {
-        sessionLockStabilizeTimer.interval = 500
+        sessionLockStabilizeTimer.interval = Model.HOTPLUG_STABILIZE_MS
         sessionLockStabilizeTimer.restart()
       }
       root.requestSessionLock()

@@ -6,6 +6,7 @@ import Quickshell.Services.UPower
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
+import "Model.js" as Model
 
 Item {
   id: root
@@ -27,10 +28,7 @@ Item {
   property string passwordText: ""
   property bool syncingPasswordText: false
 
-  property string displayName: {
-    var user = Quickshell.env("USER") || ""
-    return user.charAt(0).toUpperCase() + user.slice(1)
-  }
+  property string displayName: Model.displayName(Quickshell.env("USER"))
   property string logoPath: (Quickshell.env("OMARCHY_PATH") || "/usr/share/omarchy") + "/logo.svg"
   property string brandingPath: Quickshell.env("HOME") + "/.config/omarchy/branding/about.txt"
   property string brandingArt: ""
@@ -77,24 +75,15 @@ Item {
     onTriggered: root.now = Date.now()
   }
 
-  readonly property string lockedForText: {
-    if (root.lockedAtMs <= 0) return ""
-    var minutes = Math.floor((root.now - root.lockedAtMs) / 60000)
-    if (minutes < 1) return ""
-    if (minutes < 60) return "locked " + minutes + "m"
-    var rest = minutes % 60
-    return "locked " + Math.floor(minutes / 60) + "h " + (rest < 10 ? "0" : "") + rest + "m"
-  }
+  readonly property string lockedForText: Model.lockedForText(root.lockedAtMs, root.now)
 
   readonly property string batteryText: {
     var device = UPower.displayDevice
-    if (!device || !device.isPresent) return ""
-    var level = Math.round(Number(device.percentage || 0) * 100)
-    var charging = device.state === UPowerDeviceState.Charging || device.state === UPowerDeviceState.FullyCharged
-    return (charging ? "󰂄 " : "󰁹 ") + level + "%"
+    return Model.batteryText(!!device && device.isPresent, device ? device.percentage : 0,
+      !!device && (device.state === UPowerDeviceState.Charging || device.state === UPowerDeviceState.FullyCharged))
   }
 
-  readonly property string infoText: [root.batteryText, root.lockedForText].filter(function(part) { return part.length > 0 }).join("   ·   ")
+  readonly property string infoText: Model.infoText([root.batteryText, root.lockedForText])
 
   signal submitPassword(string password)
   signal passwordTextEdited(string password)
@@ -152,7 +141,7 @@ Item {
     path: root.brandingPath
     watchChanges: true
     onFileChanged: reload()
-    onLoaded: root.brandingArt = text().replace(/\s+$/, "")
+    onLoaded: root.brandingArt = Model.brandingArt(text())
     onLoadFailed: root.brandingArt = ""
   }
 
