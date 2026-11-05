@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Effects
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.UPower
 import qs.Commons
 import qs.Commons as Commons
@@ -31,6 +32,8 @@ Item {
     return user.charAt(0).toUpperCase() + user.slice(1)
   }
   property string logoPath: (Quickshell.env("OMARCHY_PATH") || "/usr/share/omarchy") + "/logo.svg"
+  property string brandingPath: Quickshell.env("HOME") + "/.config/omarchy/branding/about.txt"
+  property string brandingArt: ""
   property string timeFormat: "HH:mm"
   property string dateFormat: "dddd d MMMM"
   property color ink: Qt.tint(Commons.Color.lock.text, Qt.rgba(1, 1, 1, 0.6))
@@ -143,6 +146,14 @@ Item {
     syncPasswordText()
     if (inputEnabled) Qt.callLater(forcePasswordFocus)
     Qt.callLater(function() { root.started = true })
+  }
+
+  FileView {
+    path: root.brandingPath
+    watchChanges: true
+    onFileChanged: reload()
+    onLoaded: root.brandingArt = text().replace(/\s+$/, "")
+    onLoadFailed: root.brandingArt = ""
   }
 
   // Measures the masked password at full size; passwordDotScale compares this
@@ -418,11 +429,27 @@ Item {
         }
       }
 
+      Text {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 48
+        visible: root.brandingArt.length > 0
+        textFormat: Text.PlainText
+        text: root.brandingArt
+        color: root.ink
+        opacity: 0.7
+        font.family: Style.font.family
+        font.pixelSize: 9
+        lineHeightMode: Text.FixedHeight
+        lineHeight: 10
+      }
+
       Item {
         id: logo
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 56
+        visible: root.brandingArt.length === 0
         height: 24
         width: Math.round(height * 1215 / 285)
         opacity: 0.7
