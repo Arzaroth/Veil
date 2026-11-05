@@ -75,7 +75,8 @@ the reverse fade can play. Details in [brain/BRAIN.md](brain/BRAIN.md).
 
 ```bash
 mise install && pnpm install
-pnpm test                    # Model.js and FingerprintModel.js
+pnpm typecheck && pnpm test  # src/Model.mts and FingerprintModel.js
+pnpm build                   # compile src/Model.mts to the plugin's Model.mjs (commit it)
 scripts/coverage.sh --check  # 98% line floor
 tests/qml/run.sh             # LockView in a QML runtime, shell modules stubbed
 tests/snapshot/run.sh        # the capture helper against a fake grim

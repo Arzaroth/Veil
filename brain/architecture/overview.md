@@ -9,7 +9,7 @@ session lock and creates one `LockView` per monitor on lock.
 | `manifest.json` | Veil | Plugin id `arzaroth.veil`, `kinds: ["service"]`, the `authentication` capability |
 | `Service.qml` | upstream, with Veil's hooks | Lock request, the session lock, PAM, fingerprint, blanking, IPC (`omarchy-shell lock ...`) |
 | `LockView.qml` | Veil, keeping upstream's password field | What each monitor shows |
-| `Model.js` | Veil | Pure functions and constants the QML calls |
+| `Model.mjs` | Veil, compiled from `src/Model.mts` | Pure functions and constants the QML calls |
 | `FingerprintModel.js` | upstream, unchanged | Fingerprint retry and availability model |
 | `poster.sh` | upstream, unchanged | Poster frame for video wallpapers |
 | `bin/snapshot` | Veil | Captures each monitor with `grim`, and cleans up |

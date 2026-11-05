@@ -50,4 +50,4 @@ the displays go off. `resumeMs` (15 s after a resume) is upstream's.
   `requestSessionLock`, `captureSnapshots`, `dropSnapshots`, `finishUnlock`,
   `releaseLock`, `snapshotProc`, `snapshotCleanTimer`, `unlockFadeTimer`,
   `idleBlankTimer`
-- `omarchy/arzaroth.veil/Model.js`, `omarchy/arzaroth.veil/bin/snapshot`
+- `src/Model.mts`, `omarchy/arzaroth.veil/bin/snapshot`

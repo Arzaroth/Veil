@@ -6,7 +6,7 @@ import Quickshell.Wayland
 import qs.Commons
 import qs.Commons as Commons
 import "FingerprintModel.js" as FingerprintModel
-import "Model.js" as Model
+import "Model.mjs" as Model
 
 Item {
   id: root

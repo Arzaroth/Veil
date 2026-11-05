@@ -28,7 +28,7 @@ hold). `started` turns true just after creation. See
   date, name, info line and art use it; the field's placeholder uses it at
   60% alpha. Errors keep `lock.textError`.
 - `displayName`, `lockedForText`, `batteryText`, `infoText` and `brandingArt`
-  come from `Model.js`. `now` ticks every second.
+  come from `Model.mjs` (`src/Model.mts`). `now` ticks every second.
 - The branding file is read with `FileView` and watched, so editing it
   updates the lock.
 
@@ -37,4 +37,4 @@ the fingerprint icon are upstream's; Veil adds the shake on `failedAttempts`.
 
 ## Sources
 
-- `omarchy/arzaroth.veil/LockView.qml`, `omarchy/arzaroth.veil/Model.js`
+- `omarchy/arzaroth.veil/LockView.qml`, `src/Model.mts`
