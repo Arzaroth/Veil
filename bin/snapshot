@@ -1,0 +1,31 @@
+#!/bin/bash
+set -uo pipefail
+umask 077
+
+dir="${XDG_RUNTIME_DIR:?}/arzaroth-lock"
+
+case "${1:-}" in
+capture)
+  epoch="$2"
+  shift 2
+  rm -rf "$dir"
+  mkdir -m 700 "$dir" || exit 1
+  i=0
+  for output in "$@"; do
+    timeout 0.45 grim -t jpeg -q 90 -o "$output" "$dir/$epoch-$i.jpg" </dev/null >/dev/null 2>&1 &
+    i=$((i + 1))
+  done
+  wait
+  i=0
+  for output in "$@"; do
+    [[ -s $dir/$epoch-$i.jpg ]] && printf '%s\t%s\n' "$output" "$dir/$epoch-$i.jpg"
+    i=$((i + 1))
+  done
+  ;;
+clean)
+  rm -rf "$dir"
+  ;;
+*)
+  exit 2
+  ;;
+esac

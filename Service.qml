@@ -21,6 +21,9 @@ Item {
   property bool lockRequested: false
   property bool unlocking: false
   property double lockedAtMs: 0
+  property var snapshotFiles: ({})
+  property int snapshotEpoch: 0
+  readonly property string pluginDir: Qt.resolvedUrl(".").toString().replace(/^file:\/\//, "").replace(/\/$/, "")
   property bool pendingSessionLock: false
   property bool authenticatingPassword: false
   property bool fingerprintAuthenticating: false
@@ -225,7 +228,10 @@ Item {
     unlockFadeTimer.stop()
     unlocking = false
     resetAuthenticationState()
-    if (!lockRequested) lockedAtMs = Date.now()
+    if (!lockRequested) {
+      lockedAtMs = Date.now()
+      captureSnapshots()
+    }
     lockRequested = true
     armBlankTimer()
     logEvent("lock-requested")
@@ -244,6 +250,26 @@ Item {
 
     unlocking = true
     unlockFadeTimer.restart()
+  }
+
+  function captureSnapshots() {
+    snapshotEpoch += 1
+    snapshotFiles = ({})
+    if (snapshotProc.running) return
+    var names = []
+    var screens = Quickshell.screens || []
+    for (var i = 0; i < screens.length; i++) if (screens[i] && screens[i].name) names.push(screens[i].name)
+    if (names.length === 0) return
+    snapshotProc.epoch = snapshotEpoch
+    snapshotProc.command = [pluginDir + "/bin/snapshot", "capture", String(snapshotEpoch)].concat(names)
+    snapshotProc.running = true
+  }
+
+  function dropSnapshots() {
+    snapshotCleanTimer.stop()
+    snapshotEpoch += 1
+    snapshotFiles = ({})
+    cleanSnapshotProc.running = true
   }
 
   function releaseLock() {
@@ -500,9 +526,12 @@ Item {
         pendingSessionLockTimer.stop()
       }
 
+      if (locked) snapshotCleanTimer.restart()
+
       if (!locked) {
         unlockFadeTimer.stop()
         root.unlocking = false
+        root.dropSnapshots()
       }
 
       if (!locked && root.lockRequested) {
@@ -537,6 +566,7 @@ Item {
         inputEnabled: root.lockRequested && !root.unlocking
         unlocking: root.unlocking
         lockedAtMs: root.lockedAtMs
+        snapshotPath: lockSurface.screen ? (root.snapshotFiles[lockSurface.screen.name] || "") : ""
         loadBackground: root.locked
         passwordText: root.enteredPassword
         onPasswordTextEdited: function(password) { root.enteredPassword = password }
@@ -648,6 +678,36 @@ Item {
       asynchronous: true
       cache: true
     }
+  }
+
+  Process {
+    id: snapshotProc
+    property int epoch: 0
+    stdout: StdioCollector { id: snapshotOutput; waitForEnd: true }
+    onExited: function(exitCode) {
+      if (epoch !== root.snapshotEpoch || !root.lockRequested || sessionLock.locked) {
+        if (!root.lockRequested) cleanSnapshotProc.running = true
+        return
+      }
+      var files = {}
+      snapshotOutput.text.split("\n").forEach(function(line) {
+        var parts = line.split("\t")
+        if (parts.length === 2 && parts[1].length > 0) files[parts[0]] = parts[1]
+      })
+      root.snapshotFiles = files
+    }
+  }
+
+  Process {
+    id: cleanSnapshotProc
+    command: [root.pluginDir + "/bin/snapshot", "clean"]
+  }
+
+  Timer {
+    id: snapshotCleanTimer
+    interval: 3000
+    repeat: false
+    onTriggered: cleanSnapshotProc.running = true
   }
 
   Timer {

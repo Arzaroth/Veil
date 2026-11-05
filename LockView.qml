@@ -20,6 +20,7 @@ Item {
   property bool inputEnabled: true
   property bool unlocking: false
   property double lockedAtMs: 0
+  property string snapshotPath: ""
   property bool loadBackground: true
   property string passwordText: ""
   property bool syncingPasswordText: false
@@ -176,10 +177,33 @@ Item {
       source: wallpaper
       autoPaddingEnabled: false
       blurEnabled: root.loadBackground && wallpaper.ready
+      blur: snapshot.available ? 1 : root.reveal
+      blurMax: 128
+      blurMultiplier: 1.25
+      contrast: -0.08 * (snapshot.available ? 1 : root.reveal)
+    }
+
+    Image {
+      id: snapshot
+      readonly property bool available: root.snapshotPath.length > 0 && status === Image.Ready
+      anchors.fill: parent
+      source: root.snapshotPath.length > 0 ? Util.fileUrl(root.snapshotPath) : ""
+      asynchronous: false
+      cache: false
+      fillMode: Image.PreserveAspectCrop
+      visible: false
+    }
+
+    MultiEffect {
+      anchors.fill: snapshot
+      source: snapshot
+      visible: snapshot.available && opacity > 0
+      opacity: 1 - root.reveal
+      autoPaddingEnabled: false
+      blurEnabled: true
       blur: root.reveal
       blurMax: 128
       blurMultiplier: 1.25
-      contrast: -0.08 * root.reveal
     }
 
     Rectangle {
