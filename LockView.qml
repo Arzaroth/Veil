@@ -16,6 +16,7 @@ Item {
   property string failureMessage: ""
   property int failedAttempts: 0
   property bool inputEnabled: true
+  property bool unlocking: false
   property bool loadBackground: true
   property string passwordText: ""
   property bool syncingPasswordText: false

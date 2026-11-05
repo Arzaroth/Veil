@@ -19,6 +19,7 @@ Item {
   readonly property string currentBackgroundLink: stateHome + "/omarchy/current/background"
 
   property bool lockRequested: false
+  property bool unlocking: false
   property bool pendingSessionLock: false
   property bool authenticatingPassword: false
   property bool fingerprintAuthenticating: false
@@ -220,6 +221,8 @@ Item {
       return false
     }
 
+    unlockFadeTimer.stop()
+    unlocking = false
     resetAuthenticationState()
     lockRequested = true
     armBlankTimer()
@@ -235,6 +238,14 @@ Item {
   }
 
   function finishUnlock() {
+    if (!root.currentlyLocked() || unlocking) return
+
+    unlocking = true
+    unlockFadeTimer.restart()
+  }
+
+  function releaseLock() {
+    unlocking = false
     if (!root.currentlyLocked()) return
 
     lockRequested = false
@@ -487,6 +498,11 @@ Item {
         pendingSessionLockTimer.stop()
       }
 
+      if (!locked) {
+        unlockFadeTimer.stop()
+        root.unlocking = false
+      }
+
       if (!locked && root.lockRequested) {
         root.lockRequested = false
         root.pendingSessionLock = false
@@ -516,7 +532,8 @@ Item {
         authenticatingPassword: root.authenticatingPassword
         failureMessage: root.failureMessage
         failedAttempts: root.failedAttempts
-        inputEnabled: root.lockRequested
+        inputEnabled: root.lockRequested && !root.unlocking
+        unlocking: root.unlocking
         loadBackground: root.locked
         passwordText: root.enteredPassword
         onPasswordTextEdited: function(password) { root.enteredPassword = password }
@@ -628,6 +645,13 @@ Item {
       asynchronous: true
       cache: true
     }
+  }
+
+  Timer {
+    id: unlockFadeTimer
+    interval: 450
+    repeat: false
+    onTriggered: root.releaseLock()
   }
 
   Timer {
