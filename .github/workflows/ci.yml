@@ -30,6 +30,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # The plugin ships the compiled Model.mjs, so a source change that was
+      # not rebuilt would install the old logic.
+      - name: Compiled output matches the source
+        run: |
+          pnpm build
+          git diff --exit-code -- omarchy/ || {
+            echo "::error::omarchy/arzaroth.veil/Model.mjs is stale - run pnpm build and commit it"
+            exit 1
+          }
+
       - name: Unit tests
         run: pnpm test
 
