@@ -30,14 +30,17 @@ reverse. Password and fingerprint checks are Omarchy's own, unchanged.
 Needs Omarchy 4.5 or newer.
 
 ```bash
-git clone https://github.com/Arzaroth/Veil.git
-cd Veil
-scripts/install.sh
+curl -fsSL https://raw.githubusercontent.com/Arzaroth/Veil/master/scripts/install.sh | bash
 ```
 
-The script copies `omarchy/arzaroth.veil` into `~/.config/omarchy/plugins/`,
-enables it, disables Omarchy's `omarchy.lock`, and restarts the shell (lock
-services only load on a restart). Re-run it after pulling to update.
+That downloads the latest release, checks it against the release's
+`SHA256SUMS`, copies the plugin into `~/.config/omarchy/plugins/`, enables
+it, disables Omarchy's `omarchy.lock`, and restarts the shell (lock services
+only load on a restart). Run it again to update. Options go after
+`bash -s --`: `--version X.Y.Z` for a given release, `--no-restart`.
+
+From a checkout, `scripts/install.sh` installs that checkout instead
+(`--release` to install the latest release from it).
 
 ```bash
 omarchy-shell lock preview      # the lock screen without locking (click to close)
@@ -45,7 +48,7 @@ scripts/install.sh --uninstall  # remove Veil and give the lock back to omarchy.
 ```
 
 If the lock ever misbehaves, switch to a TTY (`Ctrl+Alt+F2`) and run
-`scripts/install.sh --uninstall`.
+`curl -fsSL https://raw.githubusercontent.com/Arzaroth/Veil/master/scripts/install.sh | bash -s -- --uninstall`.
 
 ## Configuration
 
@@ -94,7 +97,8 @@ pnpm build                   # compile src/Model.mts to the plugin's Model.mjs (
 scripts/coverage.sh --check  # 98% line floor
 tests/qml/run.sh             # LockView in a QML runtime, shell modules stubbed
 tests/snapshot/run.sh        # the capture helper against a fake grim
-tests/install/run.sh         # the install script against fake omarchy tools
+tests/install/run.sh         # the install script against fake omarchy tools and a local release
+tests/package/run.sh         # the release archive
 ```
 
 See [CLAUDE.md](CLAUDE.md) for the rules a change must keep.

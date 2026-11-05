@@ -82,5 +82,6 @@ Building at install time: Node becomes a runtime requirement of a lock screen.
   included, so the upstream diff stays empty.
 - The plugin installs by copy (`scripts/install.sh`), like TailGauge and
   TokenGauge, rather than `omarchy plugin add`: the repository root holds the
-  docs and tests, and the plugin is a subfolder.
+  docs and tests, and the plugin is a subfolder. Releases make the copy work
+  without a clone: the same script, fed a verified archive.
 - The name: a veil is drawn over the desktop, the blur, and lifted on unlock.

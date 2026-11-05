@@ -1,19 +1,29 @@
 #!/usr/bin/env bash
-# Install Veil into omarchy-shell from this checkout, in place of Omarchy's
-# own lock screen (omarchy.lock).
+# Install Veil into omarchy-shell in place of Omarchy's own lock screen
+# (omarchy.lock), from this checkout or, without one, from a GitHub release.
 #
-#   scripts/install.sh               copy the plugin, enable it, restart the shell
-#   scripts/install.sh --uninstall   remove it and give the lock back to omarchy.lock
-#   scripts/install.sh --no-restart  leave the shell running (the lock service
-#                                    only loads on the next restart)
+#   scripts/install.sh                   copy the plugin, enable it, restart the shell
+#   scripts/install.sh --release         install the latest release instead of this checkout
+#   scripts/install.sh --version X.Y.Z   install that release
+#   scripts/install.sh --uninstall       remove it and give the lock back to omarchy.lock
+#   scripts/install.sh --no-restart      leave the shell running (the lock service
+#                                        only loads on the next restart)
+#
+#   curl -fsSL https://raw.githubusercontent.com/Arzaroth/Veil/master/scripts/install.sh | bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+SELF="${BASH_SOURCE[0]:-}"
+REPO_DIR=""
+if [[ -n $SELF && -f $SELF ]]; then
+  REPO_DIR="$(cd "$(dirname "$SELF")/.." && pwd)"
+fi
+
+API_URL="${VEIL_API_URL:-https://api.github.com/repos/Arzaroth/Veil}"
+DOWNLOAD_URL="${VEIL_DOWNLOAD_URL:-https://github.com/Arzaroth/Veil/releases/download}"
 
 PLUGIN_ID="arzaroth.veil"
 STOCK_ID="omarchy.lock"
-PLUGIN_SRC="$REPO_DIR/omarchy/$PLUGIN_ID"
+PLUGIN_SRC="${REPO_DIR:-/nonexistent}/omarchy/$PLUGIN_ID"
 PLUGIN_DIR="$HOME/.config/omarchy/plugins/$PLUGIN_ID"
 
 if [[ -t 1 ]]; then B="\033[0;34m"; G="\033[0;32m"; Y="\033[0;33m"; R="\033[0;31m"; Z="\033[0m"; else B=""; G=""; Y=""; R=""; Z=""; fi
@@ -24,12 +34,23 @@ fail()    { printf '%b\n' "${R}$*${Z}" >&2; }
 
 MODE=install
 RESTART=1
+FROM_RELEASE=0
+VERSION=""
+PASS=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
   --uninstall) MODE=uninstall ;;
-  --no-restart) RESTART=0 ;;
+  --no-restart) RESTART=0; PASS+=("$1") ;;
+  --release) FROM_RELEASE=1 ;;
+  --version)
+    [[ $# -ge 2 ]] || { fail "--version needs a value (x.y.z)"; exit 1; }
+    FROM_RELEASE=1
+    VERSION="${2#v}"
+    shift
+    ;;
+  --version=*) FROM_RELEASE=1; VERSION="${1#--version=}"; VERSION="${VERSION#v}" ;;
   -h | --help)
-    sed -n '2,9p' "${BASH_SOURCE[0]}" | sed 's/^# \?//'
+    echo "Usage: install.sh [--release | --version X.Y.Z] [--no-restart] | --uninstall"
     exit 0
     ;;
   *) fail "unknown option: $1"; exit 1 ;;
@@ -61,7 +82,40 @@ if [[ $MODE == uninstall ]]; then
   exit 0
 fi
 
-[[ -d $PLUGIN_SRC ]] || { fail "plugin source not found: $PLUGIN_SRC"; exit 1; }
+install_release() {
+  for tool in curl jq tar sha256sum; do
+    command -v "$tool" >/dev/null 2>&1 || { fail "$tool not found - it is needed to download a release."; exit 1; }
+  done
+  local tag
+  if [[ -n $VERSION ]]; then
+    tag="v$VERSION"
+  else
+    info "Looking up the latest release..."
+    tag="$(curl -fsSL "$API_URL/releases/latest" | jq -r '.tag_name // empty')" || true
+  fi
+  [[ $tag =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { fail "no release found (got '${tag:-nothing}')."; exit 1; }
+  local version="${tag#v}"
+  RELEASE_WORK="$(mktemp -d)"
+  trap 'rm -rf "$RELEASE_WORK"' EXIT
+  local work="$RELEASE_WORK"
+  info "Downloading Veil $version..."
+  if ! curl -fsSL -o "$work/veil-$version.tar.gz" "$DOWNLOAD_URL/$tag/veil-$version.tar.gz" ||
+    ! curl -fsSL -o "$work/SHA256SUMS" "$DOWNLOAD_URL/$tag/SHA256SUMS"; then
+    fail "could not download release $tag."
+    exit 1
+  fi
+  if ! (cd "$work" && grep -E " [*]?veil-$version\.tar\.gz\$" SHA256SUMS | sha256sum -c --status -); then
+    fail "the archive does not match SHA256SUMS; nothing was installed."
+    exit 1
+  fi
+  tar -xzf "$work/veil-$version.tar.gz" -C "$work"
+  bash "$work/veil-$version/scripts/install.sh" "${PASS[@]}"
+}
+
+if [[ $FROM_RELEASE -eq 1 || -z $REPO_DIR || ! -f $PLUGIN_SRC/manifest.json ]]; then
+  install_release
+  exit 0
+fi
 
 info "Validating the plugin manifest..."
 omarchy-plugin-validate "$PLUGIN_SRC"

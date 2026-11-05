@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `timeFormat`, `dateFormat`, `brandingPath` and `blankAfter` (seconds),
   applied as soon as the file is saved. Bad values and unknown keys are
   ignored with a warning in the journal.
+- Releases: each version is published on GitHub as `veil-x.y.z.tar.gz` with
+  `SHA256SUMS`, and `install.sh` piped from `curl` installs the latest one
+  (or `--version x.y.z`) after checking its checksum, no clone needed.
 
 ### Changed
 

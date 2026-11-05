@@ -8,7 +8,7 @@ The commands in `CLAUDE.md` Conventions; CI runs the same set.
 |---|---|
 | `js` | `pnpm typecheck`, `pnpm build` with no diff under `omarchy/` (the committed `Model.mjs` is fresh), `pnpm test` |
 | `qml` | `qmllint` over `omarchy/**/*.qml` (fails on a `[syntax]` diagnostic only, since the shell's imports cannot resolve in CI), then `tests/qml/run.sh` |
-| `shell` | shellcheck, `tests/snapshot/run.sh`, `tests/install/run.sh` |
+| `shell` | shellcheck, `tests/snapshot/run.sh`, `tests/install/run.sh`, `tests/package/run.sh` |
 | `coverage` | `scripts/coverage.sh --check` (98% of lines over `src/**/*.mts` and the plugin's hand-written JS) |
 
 CI runs on pull requests and on pushes to `master`, on GitHub Actions (the
@@ -25,8 +25,9 @@ Lock events are logged as `omarchy lock <time> <event>` in
 ## Releasing
 
 The `release` skill: bump `package.json` and `manifest.json`, close the
-changelog section, tag `vX.Y.Z`, push to Forgejo, and the mirror carries it to
-GitHub.
+changelog section, tag `vX.Y.Z`, push to Forgejo. The mirror carries the tag to
+GitHub, where `.github/workflows/release.yml` packages and publishes the
+release (see [architecture/distribution.md](architecture/distribution.md)).
 
 ## Upstream
 
@@ -43,4 +44,5 @@ push to GitHub directly. If a push does not reach GitHub, force it with
 
 ## Sources
 
-- `.github/workflows/ci.yml`, `scripts/coverage.sh`, `scripts/install.sh`
+- `.github/workflows/ci.yml`, `.github/workflows/release.yml`,
+  `scripts/coverage.sh`, `scripts/install.sh`, `scripts/package.sh`
