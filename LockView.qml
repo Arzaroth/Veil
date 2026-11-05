@@ -1,5 +1,7 @@
 import QtQuick
 import QtQuick.Effects
+import Quickshell
+import Quickshell.Services.UPower
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
@@ -17,9 +19,18 @@ Item {
   property int failedAttempts: 0
   property bool inputEnabled: true
   property bool unlocking: false
+  property double lockedAtMs: 0
   property bool loadBackground: true
   property string passwordText: ""
   property bool syncingPasswordText: false
+
+  property string displayName: {
+    var user = Quickshell.env("USER") || ""
+    return user.charAt(0).toUpperCase() + user.slice(1)
+  }
+  property string logoPath: (Quickshell.env("OMARCHY_PATH") || "/usr/share/omarchy") + "/logo.svg"
+  property string timeFormat: "HH:mm"
+  property string dateFormat: "dddd d MMMM"
 
   readonly property string placeholderText: Commons.I18n.t("lock.enterPassword")
   readonly property int fieldWidth: 381
@@ -44,6 +55,40 @@ Item {
 
   // A video wallpaper shows its still poster: nothing plays behind the lock.
   readonly property bool video: Util.isVideoPath(root.backgroundPath)
+
+  property bool started: false
+  property real reveal: started && !unlocking ? 1 : 0
+  Behavior on reveal {
+    NumberAnimation { duration: root.unlocking ? 380 : 600; easing.type: Easing.OutCubic }
+  }
+
+  property double now: Date.now()
+  Timer {
+    interval: 1000
+    running: root.visible
+    repeat: true
+    triggeredOnStart: true
+    onTriggered: root.now = Date.now()
+  }
+
+  readonly property string lockedForText: {
+    if (root.lockedAtMs <= 0) return ""
+    var minutes = Math.floor((root.now - root.lockedAtMs) / 60000)
+    if (minutes < 1) return ""
+    if (minutes < 60) return "locked " + minutes + "m"
+    var rest = minutes % 60
+    return "locked " + Math.floor(minutes / 60) + "h " + (rest < 10 ? "0" : "") + rest + "m"
+  }
+
+  readonly property string batteryText: {
+    var device = UPower.displayDevice
+    if (!device || !device.isPresent) return ""
+    var level = Math.round(Number(device.percentage || 0) * 100)
+    var charging = device.state === UPowerDeviceState.Charging || device.state === UPowerDeviceState.FullyCharged
+    return (charging ? "󰂄 " : "󰁹 ") + level + "%"
+  }
+
+  readonly property string infoText: [root.batteryText, root.lockedForText].filter(function(part) { return part.length > 0 }).join("   ·   ")
 
   signal submitPassword(string password)
   signal passwordTextEdited(string password)
@@ -83,6 +128,9 @@ Item {
   onInputEnabledChanged: {
     if (inputEnabled) Qt.callLater(forcePasswordFocus)
   }
+  onFailedAttemptsChanged: {
+    if (failedAttempts > 0) shake.restart()
+  }
 
   // A VT switch, which the NVIDIA driver forces around every suspend, takes the
   // keyboard away and Qt drops the field's focus with it. Nothing gives it back
@@ -91,6 +139,7 @@ Item {
   Component.onCompleted: {
     syncPasswordText()
     if (inputEnabled) Qt.callLater(forcePasswordFocus)
+    Qt.callLater(function() { root.started = true })
   }
 
   // Measures the masked password at full size; passwordDotScale compares this
@@ -127,10 +176,16 @@ Item {
       source: wallpaper
       autoPaddingEnabled: false
       blurEnabled: root.loadBackground && wallpaper.ready
-      blur: 1.0
+      blur: root.reveal
       blurMax: 128
       blurMultiplier: 1.25
-      contrast: -0.08
+      contrast: -0.08 * root.reveal
+    }
+
+    Rectangle {
+      anchors.fill: parent
+      color: Commons.Color.background
+      opacity: 0.45 * root.reveal
     }
 
     MouseArea {
@@ -140,126 +195,239 @@ Item {
       onPositionChanged: root.wakeRequested()
     }
 
-    BorderSurface {
-      id: inputField
-      width: root.fieldWidth
-      height: root.fieldHeight
-      anchors.centerIn: parent
-      color: Commons.Color.lock.background
-      borderSpec: root.inputBorderSpec
-      radius: Style.cornerRadius
-      clip: true
+    Item {
+      anchors.fill: parent
+      opacity: root.reveal
+      transform: Translate { y: (1 - root.reveal) * (root.unlocking ? -18 : 18) }
 
-      TextInput {
-        id: passwordInput
-        anchors.fill: parent
-        anchors.topMargin: inputField.borderTop
-        // Reserve the fingerprint icon's width on both sides so the centered
-        // dots stay symmetric and never slide under the icon as they grow.
-        anchors.rightMargin: inputField.borderRight + 18 + root.fingerprintReserve
-        anchors.bottomMargin: inputField.borderBottom
-        anchors.leftMargin: inputField.borderLeft + 18 + root.fingerprintReserve
-        verticalAlignment: TextInput.AlignVCenter
-        horizontalAlignment: TextInput.AlignHCenter
-        activeFocusOnPress: true
-        clip: true
-        enabled: root.inputEnabled && !root.authenticatingPassword
-        readOnly: root.authenticatingPassword
-        echoMode: TextInput.Password
-        passwordCharacter: "\u25CF"
-        passwordMaskDelay: 0
-        color: Commons.Color.lock.text
-        selectionColor: Commons.Color.lock.selection
-        selectedTextColor: Commons.Color.lock.text
-        font.family: Style.font.family
-        font.pixelSize: text.length > 0 ? Math.max(1, Math.floor(root.passwordDotFontSize * root.passwordDotScale)) : root.fieldFontSize
-        font.letterSpacing: text.length > 0 ? root.passwordDotLetterSpacing * root.passwordDotScale : 0
-        cursorVisible: activeFocus && root.showPasswordCursor && text.length > 0
-        cursorDelegate: Rectangle {
-          width: 2
+      Column {
+        anchors.centerIn: parent
+        anchors.verticalCenterOffset: -root.fieldHeight
+        spacing: 0
+        layer.enabled: true
+        layer.effect: MultiEffect {
+          shadowEnabled: true
+          shadowColor: "#000000"
+          shadowOpacity: 0.6
+          shadowBlur: 0.7
+          shadowVerticalOffset: 1
+        }
+
+        Text {
+          anchors.horizontalCenter: parent.horizontalCenter
+          textFormat: Text.PlainText
+          text: Qt.formatDateTime(new Date(root.now), root.timeFormat)
           color: Commons.Color.lock.text
-          visible: passwordInput.cursorVisible
+          font.family: Style.font.family
+          font.pixelSize: Style.font.display * 4
+          font.weight: Font.Light
         }
 
-        onTextChanged: {
-          if (!root.syncingPasswordText) root.passwordTextEdited(text)
-          if (text.length > 0) {
-            root.wakeRequested()
-          }
-          if (text.length > 0 && root.failureMessage.length > 0) root.clearFailureRequested()
+        Text {
+          anchors.horizontalCenter: parent.horizontalCenter
+          textFormat: Text.PlainText
+          text: Qt.locale().toString(new Date(root.now), root.dateFormat)
+          color: Commons.Color.lock.text
+          opacity: 0.85
+          font.family: Style.font.family
+          font.pixelSize: Math.round(Style.font.heading * 1.25)
         }
 
-        onAccepted: {
-          var submitted = root.passwordText
-          root.passwordTextEdited("")
-          if (submitted.length > 0) root.submitPassword(submitted)
+        Item { width: 1; height: 56 }
+
+        Text {
+          anchors.horizontalCenter: parent.horizontalCenter
+          textFormat: Text.PlainText
+          text: root.displayName
+          visible: text.length > 0
+          color: Commons.Color.lock.text
+          font.family: Style.font.family
+          font.pixelSize: Style.font.heading
+          font.letterSpacing: 1.5
         }
 
-        Keys.onPressed: function(event) {
-          root.wakeRequested()
-          if (event.isAutoRepeat && root.dropsAutoRepeat(event.key)) {
-            event.accepted = true
-            return
+        Item { width: 1; height: 14 }
+
+        BorderSurface {
+          id: inputField
+          anchors.horizontalCenter: parent.horizontalCenter
+          width: root.fieldWidth
+          height: root.fieldHeight
+          color: Commons.Color.lock.background
+          borderSpec: root.inputBorderSpec
+          radius: Style.cornerRadius
+          clip: true
+          transform: Translate { id: shakeOffset }
+
+          SequentialAnimation {
+            id: shake
+            NumberAnimation { target: shakeOffset; property: "x"; to: -7; duration: 60; easing.type: Easing.OutQuad }
+            NumberAnimation { target: shakeOffset; property: "x"; to: 6; duration: 90; easing.type: Easing.InOutQuad }
+            NumberAnimation { target: shakeOffset; property: "x"; to: -3; duration: 80; easing.type: Easing.InOutQuad }
+            NumberAnimation { target: shakeOffset; property: "x"; to: 0; duration: 70; easing.type: Easing.OutQuad }
           }
-          if (event.key === Qt.Key_Escape || (event.modifiers & Qt.ControlModifier && event.key === Qt.Key_U)) {
-            root.passwordTextEdited("")
-            event.accepted = true
+
+          TextInput {
+            id: passwordInput
+            anchors.fill: parent
+            anchors.topMargin: inputField.borderTop
+            // Reserve the fingerprint icon's width on both sides so the centered
+            // dots stay symmetric and never slide under the icon as they grow.
+            anchors.rightMargin: inputField.borderRight + 18 + root.fingerprintReserve
+            anchors.bottomMargin: inputField.borderBottom
+            anchors.leftMargin: inputField.borderLeft + 18 + root.fingerprintReserve
+            verticalAlignment: TextInput.AlignVCenter
+            horizontalAlignment: TextInput.AlignHCenter
+            activeFocusOnPress: true
+            clip: true
+            enabled: root.inputEnabled && !root.authenticatingPassword
+            readOnly: root.authenticatingPassword
+            echoMode: TextInput.Password
+            passwordCharacter: "●"
+            passwordMaskDelay: 0
+            color: Commons.Color.lock.text
+            selectionColor: Commons.Color.lock.selection
+            selectedTextColor: Commons.Color.lock.text
+            font.family: Style.font.family
+            font.pixelSize: text.length > 0 ? Math.max(1, Math.floor(root.passwordDotFontSize * root.passwordDotScale)) : root.fieldFontSize
+            font.letterSpacing: text.length > 0 ? root.passwordDotLetterSpacing * root.passwordDotScale : 0
+            cursorVisible: activeFocus && root.showPasswordCursor && text.length > 0
+            cursorDelegate: Rectangle {
+              width: 2
+              color: Commons.Color.lock.text
+              visible: passwordInput.cursorVisible
+            }
+
+            onTextChanged: {
+              if (!root.syncingPasswordText) root.passwordTextEdited(text)
+              if (text.length > 0) {
+                root.wakeRequested()
+              }
+              if (text.length > 0 && root.failureMessage.length > 0) root.clearFailureRequested()
+            }
+
+            onAccepted: {
+              var submitted = root.passwordText
+              root.passwordTextEdited("")
+              if (submitted.length > 0) root.submitPassword(submitted)
+            }
+
+            Keys.onPressed: function(event) {
+              root.wakeRequested()
+              if (event.isAutoRepeat && root.dropsAutoRepeat(event.key)) {
+                event.accepted = true
+                return
+              }
+              if (event.key === Qt.Key_Escape || (event.modifiers & Qt.ControlModifier && event.key === Qt.Key_U)) {
+                root.passwordTextEdited("")
+                event.accepted = true
+              }
+            }
           }
+
+          Text {
+            textFormat: Text.PlainText
+            anchors.fill: passwordInput
+            text: root.authenticatingPassword ? Commons.I18n.t("lock.checking") : (root.failureMessage.length > 0 ? root.failureMessage : root.placeholderText)
+            visible: passwordInput.text.length === 0
+            color: root.authenticatingPassword ? Commons.Color.lock.text : (root.failureMessage.length > 0 ? Commons.Color.lock.textError : Commons.Color.lock.placeholder)
+            font.family: Style.font.family
+            font.pixelSize: root.fieldFontSize
+            font.italic: !root.authenticatingPassword && root.failureMessage.length > 0
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideRight
+          }
+
+          // Fingerprint hint pinned inside the field's right edge when a sensor is
+          // enrolled, so the user knows they can touch to unlock instead of typing.
+          // Matches hyprlock, which draws its fingerprint icon in the same spot.
+          // A reader the shell cannot reach crosses out rather than disappears, so
+          // it stops inviting touches that can never unlock.
+          Text {
+            id: fingerprintIcon
+            objectName: "fingerprintIndicator"
+            textFormat: Text.PlainText
+            anchors.right: parent.right
+            anchors.rightMargin: inputField.borderRight + 18
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.fingerprintConfigured
+            text: root.fingerprintUnavailable ? "󰺱" : "󰈷"
+            color: root.fingerprintUnavailable ? Commons.Color.lock.textError : Commons.Color.lock.placeholder
+            font.family: Style.font.family
+            font.pixelSize: Math.round(root.fieldFontSize * 1.1)
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+          }
+        }
+
+        Item { width: 1; height: 18 }
+
+        Text {
+          anchors.horizontalCenter: parent.horizontalCenter
+          textFormat: Text.PlainText
+          text: root.infoText
+          opacity: text.length > 0 ? 1 : 0
+          color: Commons.Color.lock.placeholder
+          font.family: Style.font.family
+          font.pixelSize: Style.font.title
+        }
+
+        Item { width: 1; height: 10 }
+
+        // The crossed-out icon has no meaning to a user who has never seen it — it
+        // is not intuitive that it signals a broken reader — so the words carry the
+        // explanation and the icon only reinforces it.
+        Text {
+          objectName: "fingerprintUnavailableNotice"
+          anchors.horizontalCenter: parent.horizontalCenter
+          textFormat: Text.PlainText
+          visible: root.fingerprintConfigured && root.fingerprintUnavailable
+          text: Commons.I18n.t("lock.fingerprintUnavailable")
+          color: Commons.Color.lock.textError
+          font.family: Style.font.family
+          font.pixelSize: Style.font.heading
+          font.italic: true
+          horizontalAlignment: Text.AlignHCenter
         }
       }
 
-      Text {
-        textFormat: Text.PlainText
-        anchors.fill: passwordInput
-        text: root.authenticatingPassword ? Commons.I18n.t("lock.checking") : (root.failureMessage.length > 0 ? root.failureMessage : root.placeholderText)
-        visible: passwordInput.text.length === 0
-        color: root.authenticatingPassword ? Commons.Color.lock.text : (root.failureMessage.length > 0 ? Commons.Color.lock.textError : Commons.Color.lock.placeholder)
-        font.family: Style.font.family
-        font.pixelSize: root.fieldFontSize
-        font.italic: !root.authenticatingPassword && root.failureMessage.length > 0
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
-      }
+      Item {
+        id: logo
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 56
+        height: 24
+        width: Math.round(height * 1215 / 285)
+        opacity: 0.55
 
-      // Fingerprint hint pinned inside the field's right edge when a sensor is
-      // enrolled, so the user knows they can touch to unlock instead of typing.
-      // Matches hyprlock, which draws its fingerprint icon in the same spot.
-      // A reader the shell cannot reach crosses out rather than disappears, so
-      // it stops inviting touches that can never unlock.
-      Text {
-        id: fingerprintIcon
-        objectName: "fingerprintIndicator"
-        textFormat: Text.PlainText
-        anchors.right: parent.right
-        anchors.rightMargin: inputField.borderRight + 18
-        anchors.verticalCenter: parent.verticalCenter
-        visible: root.fingerprintConfigured
-        text: root.fingerprintUnavailable ? "󰺱" : "󰈷"
-        color: root.fingerprintUnavailable ? Commons.Color.lock.textError : Commons.Color.lock.placeholder
-        font.family: Style.font.family
-        font.pixelSize: Math.round(root.fieldFontSize * 1.1)
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-      }
-    }
+        Image {
+          id: logoImage
+          anchors.fill: parent
+          source: Util.fileUrl(root.logoPath)
+          sourceSize: Qt.size(parent.width * 2, parent.height * 2)
+          fillMode: Image.PreserveAspectFit
+          visible: false
+          layer.enabled: true
+        }
 
-    // The crossed-out icon has no meaning to a user who has never seen it — it
-    // is not intuitive that it signals a broken reader — so the words carry the
-    // explanation and the icon only reinforces it.
-    Text {
-      objectName: "fingerprintUnavailableNotice"
-      textFormat: Text.PlainText
-      anchors.top: inputField.bottom
-      anchors.topMargin: 18
-      anchors.horizontalCenter: inputField.horizontalCenter
-      visible: root.fingerprintConfigured && root.fingerprintUnavailable
-      text: Commons.I18n.t("lock.fingerprintUnavailable")
-      color: Commons.Color.lock.textError
-      font.family: Style.font.family
-      font.pixelSize: Style.font.heading
-      font.italic: true
-      horizontalAlignment: Text.AlignHCenter
+        Rectangle {
+          id: logoFill
+          anchors.fill: parent
+          color: Commons.Color.lock.text
+          visible: false
+          layer.enabled: true
+        }
+
+        MultiEffect {
+          anchors.fill: parent
+          source: logoFill
+          maskEnabled: true
+          maskSource: logoImage
+          maskThresholdMin: 0.5
+          maskSpreadAtMin: 1.0
+        }
+      }
     }
   }
 }

@@ -20,6 +20,7 @@ Item {
 
   property bool lockRequested: false
   property bool unlocking: false
+  property double lockedAtMs: 0
   property bool pendingSessionLock: false
   property bool authenticatingPassword: false
   property bool fingerprintAuthenticating: false
@@ -224,6 +225,7 @@ Item {
     unlockFadeTimer.stop()
     unlocking = false
     resetAuthenticationState()
+    if (!lockRequested) lockedAtMs = Date.now()
     lockRequested = true
     armBlankTimer()
     logEvent("lock-requested")
@@ -534,6 +536,7 @@ Item {
         failedAttempts: root.failedAttempts
         inputEnabled: root.lockRequested && !root.unlocking
         unlocking: root.unlocking
+        lockedAtMs: root.lockedAtMs
         loadBackground: root.locked
         passwordText: root.enteredPassword
         onPasswordTextEdited: function(password) { root.enteredPassword = password }
