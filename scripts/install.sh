@@ -37,7 +37,7 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-for tool in omarchy-shell omarchy-plugin-validate omarchy-plugin-enable omarchy-plugin-disable; do
+for tool in omarchy-shell omarchy-plugin-validate omarchy-plugin-enable omarchy-plugin-disable omarchy-plugin-list; do
   command -v "$tool" >/dev/null 2>&1 || { fail "$tool not found - Veil needs Omarchy 4.5 or newer."; exit 1; }
 done
 
@@ -71,6 +71,16 @@ mkdir -p "$(dirname "$PLUGIN_DIR")"
 rm -rf "$PLUGIN_DIR"
 cp -aL "$PLUGIN_SRC" "$PLUGIN_DIR"
 omarchy-shell -q shell rescanPlugins >/dev/null 2>&1 || true
+
+known=0
+for _ in $(seq 1 "${VEIL_RESCAN_TRIES:-50}"); do
+  if omarchy-plugin-list --json 2>/dev/null | grep -q "\"id\": *\"$PLUGIN_ID\""; then
+    known=1
+    break
+  fi
+  sleep 0.1
+done
+[[ $known -eq 1 ]] || { fail "omarchy-shell did not pick up $PLUGIN_DIR; omarchy.lock is left as it was."; exit 1; }
 
 info "Enabling $PLUGIN_ID..."
 omarchy-plugin-enable "$PLUGIN_ID"

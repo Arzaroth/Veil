@@ -11,6 +11,11 @@ trap 'rm -rf "$work"' EXIT
 
 mkdir -p "$work/bin" "$work/home"
 log="$work/calls"
+cat >"$work/bin/omarchy-plugin-list" <<FAKE
+#!/usr/bin/env bash
+[[ -f "$work/home/.config/omarchy/plugins/arzaroth.veil/manifest.json" && -z "\${VEIL_NEVER_KNOWN:-}" ]] && echo '[{"id": "arzaroth.veil", "enabled": false}]' || echo '[]'
+FAKE
+chmod +x "$work/bin/omarchy-plugin-list"
 for tool in omarchy-shell omarchy-plugin-validate omarchy-plugin-enable omarchy-plugin-disable omarchy-restart-shell; do
   cat >"$work/bin/$tool" <<FAKE
 #!/usr/bin/env bash
@@ -55,6 +60,13 @@ check "an unknown option is refused" "$?" "1"
 
 "$install" --help >/dev/null
 check "help exits cleanly" "$?" "0"
+
+rm -rf "$plugin"
+: >"$log"
+VEIL_NEVER_KNOWN=1 VEIL_RESCAN_TRIES=2 "$install" >/dev/null 2>&1
+check "a plugin the shell never picks up fails the install" "$?" "1"
+check "and nothing is enabled or disabled" "$(calls)" \
+  "omarchy-plugin-validate $repo/omarchy/arzaroth.veil;"
 
 rm "$work/bin/omarchy-plugin-enable"
 "$install" >/dev/null 2>&1
