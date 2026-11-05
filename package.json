@@ -1,0 +1,16 @@
+{
+  "name": "veil",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "A calm lock screen for Omarchy.",
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^5.0.1",
+    "vitest": "^5.0.1"
+  }
+}
