@@ -68,6 +68,49 @@ check "a plugin the shell never picks up fails the install" "$?" "1"
 check "and nothing is enabled or disabled" "$(calls)" \
   "omarchy-plugin-validate $repo/omarchy/arzaroth.veil;"
 
+version="$(jq -r .version "$repo/package.json")"
+srv="$work/srv"
+mkdir -p "$srv/api/releases" "$srv/download/v$version"
+SOURCE_DATE_EPOCH=1700000000 "$repo/scripts/package.sh" "$srv/download/v$version" >/dev/null
+printf '{"tag_name": "v%s"}\n' "$version" >"$srv/api/releases/latest"
+export VEIL_API_URL="file://$srv/api" VEIL_DOWNLOAD_URL="file://$srv/download"
+mkdir -p "$work/tmp"
+export TMPDIR="$work/tmp"
+extracted="omarchy-plugin-validate $work/tmp/.*/veil-$version/omarchy/arzaroth.veil;omarchy-plugin-enable arzaroth.veil;omarchy-plugin-disable omarchy.lock;"
+
+rm -rf "$plugin"
+: >"$log"
+(cd "$work" && bash -s -- --no-restart <"$repo/scripts/install.sh") >/dev/null 2>&1
+check "piped into bash with no checkout, it installs the latest release" "$?" "0"
+check "from the extracted release" "$(calls | grep -cE "^$extracted\$")" "1"
+check "the plugin is in place" "$([[ -f $plugin/Model.mjs ]] && echo yes)" "yes"
+check "and the download is cleaned up" "$(find "$work/tmp" -mindepth 1 | wc -l)" "0"
+
+rm -rf "$plugin"
+: >"$log"
+"$install" --version "$version" --no-restart >/dev/null 2>&1
+check "--version installs that release even from a checkout" "$(calls | grep -cE "^$extracted\$")" "1"
+
+rm -rf "$plugin"
+: >"$log"
+archive="$srv/download/v$version/veil-$version.tar.gz"
+cp "$archive" "$work/archive"
+printf 'x' >>"$archive"
+"$install" --release >/dev/null 2>&1
+check "an archive that does not match its checksum is refused" "$?" "1"
+check "and nothing is touched" "$(calls)$([[ -e $plugin ]] && echo present)" ""
+cp "$work/archive" "$archive"
+
+printf '{"message": "Not Found"}\n' >"$srv/api/releases/latest"
+"$install" --release >/dev/null 2>&1
+check "no release to install is an error" "$?" "1"
+
+"$install" --version 9.9.9 >/dev/null 2>&1
+check "a release that does not exist is an error" "$?" "1"
+
+"$install" --version >/dev/null 2>&1
+check "--version without a value is refused" "$?" "1"
+
 rm "$work/bin/omarchy-plugin-enable"
 "$install" >/dev/null 2>&1
 check "missing Omarchy tooling is refused" "$?" "1"
