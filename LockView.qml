@@ -19,6 +19,7 @@ Item {
   property int failedAttempts: 0
   property bool inputEnabled: true
   property bool unlocking: false
+  property bool presented: true
   property double lockedAtMs: 0
   property string snapshotPath: ""
   property bool loadBackground: true
@@ -58,9 +59,9 @@ Item {
   readonly property bool video: Util.isVideoPath(root.backgroundPath)
 
   property bool started: false
-  property real reveal: started && !unlocking ? 1 : 0
+  property real reveal: started && presented && !unlocking ? 1 : 0
   Behavior on reveal {
-    NumberAnimation { duration: root.unlocking ? 380 : 600; easing.type: Easing.OutCubic }
+    NumberAnimation { duration: root.unlocking ? 380 : 700; easing.type: root.unlocking ? Easing.OutCubic : Easing.InOutCubic }
   }
 
   property double now: Date.now()

@@ -565,6 +565,7 @@ Item {
         failedAttempts: root.failedAttempts
         inputEnabled: root.lockRequested && !root.unlocking
         unlocking: root.unlocking
+        presented: sessionLock.secure
         lockedAtMs: root.lockedAtMs
         snapshotPath: lockSurface.screen ? (root.snapshotFiles[lockSurface.screen.name] || "") : ""
         loadBackground: root.locked
