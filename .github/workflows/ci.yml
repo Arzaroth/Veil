@@ -94,6 +94,9 @@ jobs:
       - name: Snapshot helper
         run: tests/snapshot/run.sh
 
+      - name: Install script
+        run: tests/install/run.sh
+
   coverage:
     runs-on: ubuntu-latest
     steps:
