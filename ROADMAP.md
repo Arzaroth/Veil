@@ -13,14 +13,7 @@ doc lands in `brain/features/`.
 - [x] `scripts/install.sh` and `--uninstall`.
 - [x] The brain, and the `brain`, `feature-treatment`, `release` and
   `upstream-check` skills.
-
-## M1 - Settings without editing QML
-
-The properties at the top of `LockView.qml` and `idleMs` move to the plugin's
-entry in `~/.config/omarchy/shell.json`, read through the plugin settings API
-omarchy-shell gives services. Decided: same names as the QML properties, and a
-missing key keeps today's default. Open: whether the shell exposes settings to
-a `service` plugin the way it does to bar widgets (see TODO.md).
+- [x] Settings in `shell.json` (was M1, see `brain/features/settings.md`).
 
 ## M2 - Releases
 

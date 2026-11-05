@@ -15,8 +15,8 @@ What each monitor shows while locked, top to bottom:
   changes. Missing or empty shows the Omarchy wordmark instead.
 
 All text uses the theme's lock colour lightened (`ink`) over a dimmed, blurred
-wallpaper. Settings are QML properties for now; moving them to `shell.json`
-is M1 in `ROADMAP.md`.
+wallpaper. The name, formats and art path are settings: see
+[settings.md](settings.md).
 
 ## Sources
 

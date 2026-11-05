@@ -27,7 +27,10 @@ hold). `started` turns true just after creation. See
 - `ink` is `Commons.Color.lock.text` tinted 60% towards white; the clock,
   date, name, info line and art use it; the field's placeholder uses it at
   60% alpha. Errors keep `lock.textError`.
-- `displayName`, `lockedForText`, `batteryText`, `infoText` and `brandingArt`
+- `settings` is the resolved settings object from the service (defaults when
+  the view is created on its own); `displayName`, `timeFormat`, `dateFormat`
+  and `brandingPath` bind to it.
+- `lockedForText`, `batteryText`, `infoText` and `brandingArt`
   come from `Model.mjs` (`src/Model.mts`). `now` ticks every second.
 - The branding file is read with `FileView` and watched, so editing it
   updates the lock.

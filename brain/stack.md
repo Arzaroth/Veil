@@ -5,7 +5,8 @@
   `Quickshell`, `Quickshell.Io`, `Quickshell.Services.Pam`,
   `Quickshell.Services.UPower`, `Quickshell.Wayland`, `QtQuick.Effects`, and
   omarchy-shell's `qs.Commons` and `qs.Ui`.
-- **TypeScript** 5.7 (`tsconfig.json`, strict): `src/Model.mts`, Veil's logic,
+- **TypeScript** 5.7 (`tsconfig.json`, strict, target ES2018 for QML's
+  engine): `src/Model.mts`, Veil's logic,
   compiled to the ES module `omarchy/arzaroth.veil/Model.mjs` that QML imports.
 - **JavaScript**: `FingerprintModel.js`, upstream's, a plain script with a
   `module.exports` guard so Node can load it for tests.

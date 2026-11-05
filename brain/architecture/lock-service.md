@@ -39,9 +39,17 @@ upstream's unlock: it clears the request, stops the timers and sets
 `sessionLock.locked = false`. When the session reports unlocked, the hold and
 the snapshots are cleared.
 
+## Settings
+
+A `FileView` watches `configPath` (`shell.json`); each load goes through
+`Model.readSettings` (problems logged as `veil: ...`) into `settingsRead`, and
+`settings` is `Model.resolveSettings` of it with the user and home. Both the
+lock surfaces' views and the preview get `settings`. See
+[../features/settings.md](../features/settings.md).
+
 ## Blanking
 
-`idleBlankTimer.idleMs` is 30 s (upstream 5 s): without input for that long
+`idleBlankTimer.idleMs` is `settings.blankAfterMs`, 30 s by default (upstream 5 s): without input for that long
 the displays go off. `resumeMs` (15 s after a resume) is upstream's.
 
 ## Sources

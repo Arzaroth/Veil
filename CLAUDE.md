@@ -75,6 +75,22 @@ and read as a jump from the windows to a blurred wallpaper. The harness
 installs without Node. Edit the `.mts`, rebuild, and commit both; CI's `js`
 job fails when they disagree. Never edit `Model.mjs` by hand.
 
+## QML's engine accepts ES2018, not everything TypeScript emits
+
+`tsconfig.json` targets ES2018 so `tsc` lowers newer syntax. QML's V4 engine
+rejected `catch {}` without a binding (ES2019) with a syntax error, and a
+`Model.mjs` that does not parse takes the whole lock view down with it. Do not
+raise the target without loading the result in `tests/qml/run.sh`, which
+imports `Model.mjs` the way the shell does.
+
+## Settings are read, never trusted
+
+`shell.json` is the user's file, edited by hand. `Model.readSettings` takes
+Veil's `plugins[]` entry, keeps each key only if it has the right type and
+range, and returns a problem line for everything else, which the service logs
+as `veil: ...`. A broken file or a bad value never stops the lock: it falls
+back to the default. `tests/js/settings.test.mjs` covers each rule.
+
 ## Lock services load on a shell restart
 
 omarchy-shell hot-reloads plugin files, but a `service` plugin's instance only

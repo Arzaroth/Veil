@@ -61,6 +61,13 @@ Building at install time: Node becomes a runtime requirement of a lock screen.
 
 ## Bullets
 
+- Settings live on Veil's `plugins[]` entry in `shell.json` rather than a file
+  of Veil's own: it is where an Omarchy user already edits the shell, and the
+  shell keeps the keys. The cost is that disabling the plugin drops them.
+- The blank delay is `blankAfter` in seconds, like `shell.json`'s own `idle`
+  keys, not `idleMs` as the QML property is named.
+- `tsconfig.json` targets ES2018: QML's engine rejected ES2019's `catch {}`.
+
 - The pre-lock wait is 150 ms on stable screens and upstream's 500 ms around a
   hotplug, rather than 500 ms always or no wait: see
   [features/timing.md](features/timing.md).

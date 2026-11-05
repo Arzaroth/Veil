@@ -43,6 +43,7 @@ answer. Every leaf doc ends with the source files behind it.
 |---|---|
 | [transitions.md](features/transitions.md) | The fade from your windows on lock, and back on unlock. |
 | [lock-screen.md](features/lock-screen.md) | Clock, date, name, info line, branding art, the shake. |
+| [settings.md](features/settings.md) | The `shell.json` keys, defaults and validation. |
 | [timing.md](features/timing.md) | The 150 ms pre-lock wait and the 30 s before blanking. |
 
 ## Find by question
@@ -52,7 +53,8 @@ answer. Every leaf doc ends with the source files behind it.
 | Can Veil unlock without a correct password? What did it change in auth? | [architecture/lock-service.md](architecture/lock-service.md) |
 | Why does the lock fade from my windows, and where do the captures go? | [features/transitions.md](features/transitions.md) |
 | Why did the lock fade look like a jump? | [decisions.md](decisions.md#0002-start-the-fade-on-secure) |
-| How do I change the name, clock format or art? | [features/lock-screen.md](features/lock-screen.md) |
+| How do I change the name, clock format, art or blank delay? | [features/settings.md](features/settings.md) |
+| Why is my setting ignored? | [features/settings.md](features/settings.md) |
 | Why 150 ms before locking, and when is it 500? | [features/timing.md](features/timing.md) |
 | Why is my QML change not showing? | [operations.md](operations.md) |
 | What does the coverage floor measure? | [architecture/testing.md](architecture/testing.md) |
