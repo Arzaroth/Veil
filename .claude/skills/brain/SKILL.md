@@ -56,7 +56,7 @@ The code is the source of truth.
 
 1. Scope to the relevant leaf docs.
 2. For each, read its `## Sources` and confirm the claims: function names
-   (`git grep`), constants in `Model.js` and their values, timer intervals in
+   (`git grep`), constants in `src/Model.mts` and their values, timer intervals in
    `Service.qml`, file paths, test names.
 3. The code wins: correct the doc and say what changed.
 4. Update the indexes if a doc was added, moved or removed.

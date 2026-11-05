@@ -20,4 +20,4 @@ is M1 in `ROADMAP.md`.
 
 ## Sources
 
-- `omarchy/arzaroth.veil/LockView.qml`, `omarchy/arzaroth.veil/Model.js`
+- `omarchy/arzaroth.veil/LockView.qml`, `src/Model.mts`

@@ -59,8 +59,9 @@ lens, and give each the named `CLAUDE.md` section(s). 4-6 is typical.
   before `secure`), Text bound to untrusted text without
   `textFormat: Text.PlainText`, an animation longer than
   `Model.UNLOCK_FADE_MS` on the way out.
-- **Tests / reuse** - logic left in QML that belongs in `Model.js` (and so
-  escapes the coverage floor), a new branch without a test, a harness step the
+- **Tests / reuse** - logic left in QML that belongs in `src/Model.mts` (and so
+  escapes the types and the coverage floor), a `Model.mjs` edited by hand or
+  not rebuilt, a new branch without a test, a harness step the
   change should add, a stub that now lies about the shell.
 
 Each finder returns `{file, line, severity, summary, failure_scenario}`,
@@ -82,7 +83,8 @@ Run the `brain` skill's maintain checklist over what changed, plus
 ## 5. Gate
 
 ```bash
-pnpm install --frozen-lockfile && pnpm test
+pnpm install --frozen-lockfile && pnpm typecheck && pnpm test
+pnpm build && git diff --exit-code -- omarchy/
 scripts/coverage.sh --check
 tests/qml/run.sh
 tests/snapshot/run.sh

@@ -17,4 +17,4 @@ authentication, for the reverse fade.
 
 ## Sources
 
-- `omarchy/arzaroth.veil/Model.js`, `omarchy/arzaroth.veil/Service.qml`
+- `src/Model.mts`, `omarchy/arzaroth.veil/Service.qml`

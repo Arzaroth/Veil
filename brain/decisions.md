@@ -44,6 +44,21 @@ about 70 ms, inside the 150 ms.
 lock surface. Holding the lock until the capture is done: it would slow every
 lock, including the one before suspend.
 
+### 0004 TypeScript compiled to an ES module, output committed
+
+**Decision.** Veil's logic is `src/Model.mts`, compiled by `tsc` to
+`omarchy/arzaroth.veil/Model.mjs`, which QML imports as an ECMAScript module.
+The compiled file is committed; CI fails if it is stale.
+
+**Why.** QML only runs JavaScript, so the choice is what produces it. Types
+catch bad input once settings come from `shell.json`. Committing the output
+keeps the install a plain copy with no Node on the machine.
+
+**Rejected.** Plain JS (no types). A C++ QML plugin: built against the exact
+Qt that Quickshell runs, and a mismatch after an update means no lock service.
+A Rust binary called per refresh: a process launch inside the lock path.
+Building at install time: Node becomes a runtime requirement of a lock screen.
+
 ## Bullets
 
 - The pre-lock wait is 150 ms on stable screens and upstream's 500 ms around a
@@ -53,8 +68,9 @@ lock, including the one before suspend.
   looked at.
 - The text colour is a tint of the theme's, not a fixed white: it keeps the
   theme's hue on light and dark themes.
-- Coverage counts `omarchy/**/*.js` only. No tool measures QML lines; logic
-  moves to `Model.js` so it is counted, and the QML is driven by the harness.
+- Coverage counts `src/**/*.mts` and `FingerprintModel.js`. No tool measures
+  QML lines; logic moves to `src/Model.mts` so it is counted, and the QML is
+  driven by the harness.
 - `FingerprintModel.js` stays byte for byte upstream's, `module.exports` guard
   included, so the upstream diff stays empty.
 - The plugin installs by copy (`scripts/install.sh`), like TailGauge and

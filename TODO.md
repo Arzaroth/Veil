@@ -18,5 +18,5 @@ Small work, and the decisions to take before each milestone.
 ## Decisions
 
 - QML is not line-measured: no tool gives line coverage for QML, so the 98%
-  floor covers `omarchy/**/*.js` and the harness drives the QML. Revisit if
+  floor covers `src/**/*.mts` and `FingerprintModel.js`, and the harness drives the QML. Revisit if
   Qt ships QML coverage.

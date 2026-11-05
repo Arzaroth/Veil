@@ -67,6 +67,14 @@ before Hyprland shows them; a fade started at creation played mostly unseen
 and read as a jump from the windows to a blurred wallpaper. The harness
 (`tests/qml/lockview.qml`) asserts nothing is revealed before `presented`.
 
+## Model.mjs is generated, and committed
+
+`src/Model.mts` is the source; `pnpm build` compiles it to
+`omarchy/arzaroth.veil/Model.mjs`, which the QML imports
+(`import "Model.mjs" as Model`). The compiled file is committed so a clone
+installs without Node. Edit the `.mts`, rebuild, and commit both; CI's `js`
+job fails when they disagree. Never edit `Model.mjs` by hand.
+
 ## Lock services load on a shell restart
 
 omarchy-shell hot-reloads plugin files, but a `service` plugin's instance only
@@ -93,6 +101,8 @@ navigate and maintain it.
 - Gate, all green before a commit:
 
   ```bash
+  pnpm typecheck
+  pnpm build && git diff --exit-code -- omarchy/
   pnpm test
   scripts/coverage.sh --check
   tests/qml/run.sh
@@ -103,8 +113,9 @@ navigate and maintain it.
 
   plus `qmllint` on the QML (a `[syntax]` diagnostic is the failure; see
   `ci.yml`).
-- Line coverage floor: 98% over `omarchy/**/*.js` (`scripts/coverage.sh
-  --check`, CI job `coverage`). Logic that can live in `Model.js` lives there,
-  so it is measured; the QML is driven by the harness.
+- Line coverage floor: 98% over `src/**/*.mts` and the plugin's hand-written
+  JS (`scripts/coverage.sh --check`, CI job `coverage`). Logic that can live in
+  `src/Model.mts` lives there, so it is typed and measured; the QML is driven by
+  the harness.
 - Releases: the `release` skill. Upstream drift: the `upstream-check` skill.
 - No em-dashes in docs or commits.

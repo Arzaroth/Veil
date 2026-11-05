@@ -6,10 +6,10 @@ The commands in `CLAUDE.md` Conventions; CI runs the same set.
 
 | CI job (`.github/workflows/ci.yml`) | What it runs |
 |---|---|
-| `js` | `pnpm test` |
+| `js` | `pnpm typecheck`, `pnpm build` with no diff under `omarchy/` (the committed `Model.mjs` is fresh), `pnpm test` |
 | `qml` | `qmllint` over `omarchy/**/*.qml` (fails on a `[syntax]` diagnostic only, since the shell's imports cannot resolve in CI), then `tests/qml/run.sh` |
 | `shell` | shellcheck, `tests/snapshot/run.sh`, `tests/install/run.sh` |
-| `coverage` | `scripts/coverage.sh --check` (98% of lines over `omarchy/**/*.js`) |
+| `coverage` | `scripts/coverage.sh --check` (98% of lines over `src/**/*.mts` and the plugin's hand-written JS) |
 
 CI runs on pull requests and on pushes to `master`, on GitHub Actions (the
 mirror). Forgejo Actions are off.
