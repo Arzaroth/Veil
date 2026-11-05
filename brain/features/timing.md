@@ -12,7 +12,8 @@ the dock often changes the outputs then.
 authentication, for the reverse fade.
 
 **Blanking.** 30 s without input on the lock screen turns the displays off
-(`idleBlankTimer.idleMs`; upstream 5 s). After a resume it waits 15 s
+(`blankAfter` in [settings.md](settings.md), `idleBlankTimer.idleMs`;
+upstream 5 s). After a resume it waits 15 s
 (`resumeMs`, upstream's).
 
 ## Sources

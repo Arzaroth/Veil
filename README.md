@@ -7,8 +7,7 @@ the wallpaper as the screen locks, a clock, your name, your battery and your
 branding art wait on the other side, and unlocking plays the same fade in
 reverse. Password and fingerprint checks are Omarchy's own, unchanged.
 
-**Status:** usable, daily-driven on Omarchy 4.5. Settings are edited in the QML
-for now (see [Configuration](#configuration)).
+**Status:** usable, daily-driven on Omarchy 4.5.
 
 ## What it does
 
@@ -50,18 +49,33 @@ If the lock ever misbehaves, switch to a TTY (`Ctrl+Alt+F2`) and run
 
 ## Configuration
 
-Until settings move to `shell.json` ([ROADMAP.md](ROADMAP.md)), edit the
-properties at the top of `omarchy/arzaroth.veil/LockView.qml` and re-run the
-install script:
+Settings go on Veil's entry in `~/.config/omarchy/shell.json`, the one the
+install script adds to `plugins`. Changes apply as soon as the file is saved.
 
-| Property | Default | |
+```json
+"plugins": [
+  {
+    "id": "arzaroth.veil",
+    "displayName": "Arzaroth",
+    "timeFormat": "HH:mm",
+    "dateFormat": "dddd d MMMM",
+    "brandingPath": "~/.config/omarchy/branding/about.txt",
+    "blankAfter": 30
+  }
+]
+```
+
+| Key | Default | |
 | --- | --- | --- |
 | `displayName` | your login, capitalized | the name above the field |
 | `timeFormat` | `HH:mm` | Qt date format |
 | `dateFormat` | `dddd d MMMM` | Qt date format, in your locale |
 | `brandingPath` | `~/.config/omarchy/branding/about.txt` | text art at the bottom; missing or empty shows the Omarchy wordmark |
+| `blankAfter` | `30` | seconds without input before the screens blank, 5 to 3600 |
 
-The blank delay is `idleMs` in `Service.qml` (milliseconds).
+Every key is optional. A value of the wrong type, or a key Veil does not know,
+is ignored with a warning in `journalctl --user` (`veil: ...`). Disabling the
+plugin with `omarchy plugin disable` removes its entry, settings included.
 
 ## How it works
 

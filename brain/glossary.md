@@ -25,3 +25,6 @@
   white, used for the clock, date, name, info line and art.
 - **Branding art** - the text art at the bottom, read from `brandingPath`.
   Avoid: logo (that is the wordmark fallback).
+- **Settings** - the keys on Veil's `plugins[]` entry in `shell.json`, read
+  by `Model.readSettings`. See [features/settings.md](features/settings.md).
+  Avoid: config (that is the whole `shell.json`), options, preferences.

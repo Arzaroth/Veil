@@ -2,11 +2,6 @@
 
 Small work, and the decisions to take before each milestone.
 
-## Before M1
-
-- Find out whether omarchy-shell hands a `service` plugin its `shell.json`
-  entry (bar widgets get theirs); if not, settle on a file of Veil's own.
-
 ## Small
 
 - The Omarchy wordmark fallback reads `$OMARCHY_PATH/logo.svg`; the QML

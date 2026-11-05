@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A short shake of the password field on a wrong password.
 - `scripts/install.sh` to swap Omarchy's lock for Veil, and `--uninstall` to
   swap it back.
+- Settings on Veil's entry in `~/.config/omarchy/shell.json`: `displayName`,
+  `timeFormat`, `dateFormat`, `brandingPath` and `blankAfter` (seconds),
+  applied as soon as the file is saved. Bad values and unknown keys are
+  ignored with a warning in the journal.
 
 ### Changed
 
