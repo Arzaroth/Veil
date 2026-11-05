@@ -5,7 +5,8 @@ export default defineConfig({
     include: ["tests/js/**/*.test.mjs"],
     coverage: {
       provider: "v8",
-      include: ["omarchy/**/*.js"],
+      include: ["src/**/*.mts", "omarchy/**/*.js", "omarchy/**/*.mjs"],
+      exclude: ["omarchy/**/Model.mjs"],
       reporter: ["text-summary", "json-summary", "html", "lcov"],
       reportsDirectory: "coverage",
     },

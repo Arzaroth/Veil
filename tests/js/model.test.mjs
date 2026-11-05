@@ -1,7 +1,6 @@
-import { createRequire } from "node:module";
 import { describe, expect, test } from "vitest";
+import * as Model from "../../src/Model.mts";
 
-const Model = createRequire(import.meta.url)("../../omarchy/arzaroth.veil/Model.js");
 const MINUTE = 60000;
 
 describe("displayName", () => {
