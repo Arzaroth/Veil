@@ -33,6 +33,7 @@ Item {
   property string logoPath: (Quickshell.env("OMARCHY_PATH") || "/usr/share/omarchy") + "/logo.svg"
   property string timeFormat: "HH:mm"
   property string dateFormat: "dddd d MMMM"
+  property color ink: Qt.tint(Commons.Color.lock.text, Qt.rgba(1, 1, 1, 0.6))
 
   readonly property string placeholderText: Commons.I18n.t("lock.enterPassword")
   readonly property int fieldWidth: 381
@@ -210,7 +211,7 @@ Item {
     Rectangle {
       anchors.fill: parent
       color: Commons.Color.background
-      opacity: 0.45 * root.reveal
+      opacity: 0.5 * root.reveal
     }
 
     MouseArea {
@@ -242,7 +243,7 @@ Item {
           anchors.horizontalCenter: parent.horizontalCenter
           textFormat: Text.PlainText
           text: Qt.formatDateTime(new Date(root.now), root.timeFormat)
-          color: Commons.Color.lock.text
+          color: root.ink
           font.family: Style.font.family
           font.pixelSize: Style.font.display * 4
           font.weight: Font.Light
@@ -252,8 +253,8 @@ Item {
           anchors.horizontalCenter: parent.horizontalCenter
           textFormat: Text.PlainText
           text: Qt.locale().toString(new Date(root.now), root.dateFormat)
-          color: Commons.Color.lock.text
-          opacity: 0.85
+          color: root.ink
+          opacity: 0.9
           font.family: Style.font.family
           font.pixelSize: Math.round(Style.font.heading * 1.25)
         }
@@ -265,7 +266,7 @@ Item {
           textFormat: Text.PlainText
           text: root.displayName
           visible: text.length > 0
-          color: Commons.Color.lock.text
+          color: root.ink
           font.family: Style.font.family
           font.pixelSize: Style.font.heading
           font.letterSpacing: 1.5
@@ -355,7 +356,7 @@ Item {
             anchors.fill: passwordInput
             text: root.authenticatingPassword ? Commons.I18n.t("lock.checking") : (root.failureMessage.length > 0 ? root.failureMessage : root.placeholderText)
             visible: passwordInput.text.length === 0
-            color: root.authenticatingPassword ? Commons.Color.lock.text : (root.failureMessage.length > 0 ? Commons.Color.lock.textError : Commons.Color.lock.placeholder)
+            color: root.authenticatingPassword ? Commons.Color.lock.text : (root.failureMessage.length > 0 ? Commons.Color.lock.textError : Qt.rgba(root.ink.r, root.ink.g, root.ink.b, 0.6))
             font.family: Style.font.family
             font.pixelSize: root.fieldFontSize
             font.italic: !root.authenticatingPassword && root.failureMessage.length > 0
@@ -392,8 +393,8 @@ Item {
           anchors.horizontalCenter: parent.horizontalCenter
           textFormat: Text.PlainText
           text: root.infoText
-          opacity: text.length > 0 ? 1 : 0
-          color: Commons.Color.lock.placeholder
+          opacity: text.length > 0 ? 0.8 : 0
+          color: root.ink
           font.family: Style.font.family
           font.pixelSize: Style.font.title
         }
@@ -424,7 +425,7 @@ Item {
         anchors.bottomMargin: 56
         height: 24
         width: Math.round(height * 1215 / 285)
-        opacity: 0.55
+        opacity: 0.7
 
         Image {
           id: logoImage
@@ -439,7 +440,7 @@ Item {
         Rectangle {
           id: logoFill
           anchors.fill: parent
-          color: Commons.Color.lock.text
+          color: root.ink
           visible: false
           layer.enabled: true
         }
