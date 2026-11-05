@@ -14,13 +14,8 @@ doc lands in `brain/features/`.
 - [x] The brain, and the `brain`, `feature-treatment`, `release` and
   `upstream-check` skills.
 - [x] Settings in `shell.json` (was M1, see `brain/features/settings.md`).
-
-## M2 - Releases
-
-Tagged releases with the plugin folder as an archive, and an installer that
-fetches the latest one, so installing does not need a clone. Decided: the
-install script stays the one way to swap the lock, the archive only replaces
-the checkout.
+- [x] Releases and the `curl | bash` installer (was M2, see
+  `brain/architecture/distribution.md`).
 
 ## Later
 

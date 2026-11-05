@@ -35,7 +35,7 @@ answer. Every leaf doc ends with the source files behind it.
 | [lock-service.md](architecture/lock-service.md) | Service.qml: lock request, pre-lock wait, snapshot capture, unlock hold, blanking. |
 | [view.md](architecture/view.md) | LockView.qml: layers, the reveal animation, text and colours. |
 | [testing.md](architecture/testing.md) | Unit tests, the QML harness and its stubs, the shell tests, coverage. |
-| [distribution.md](architecture/distribution.md) | The install script and how the plugin reaches omarchy-shell. |
+| [distribution.md](architecture/distribution.md) | The install script, release downloads, packaging and publishing. |
 
 ## Features (the what) - [features/index.md](features/index.md)
 
@@ -59,7 +59,8 @@ answer. Every leaf doc ends with the source files behind it.
 | Why is my QML change not showing? | [operations.md](operations.md) |
 | What does the coverage floor measure? | [architecture/testing.md](architecture/testing.md) |
 | Which files are still Omarchy's? | [architecture/overview.md](architecture/overview.md) |
-| How do I install, update or uninstall? | [architecture/distribution.md](architecture/distribution.md) |
+| How do I install, update or uninstall? Without cloning? | [architecture/distribution.md](architecture/distribution.md) |
+| How is a release built and published? | [architecture/distribution.md](architecture/distribution.md), [operations.md](operations.md) |
 
 ## Maintaining the brain
 

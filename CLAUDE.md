@@ -43,6 +43,17 @@ fingerprint retry model in `FingerprintModel.js` stay as upstream wrote them.
   while outputs come and go can leave a screen without a lock surface. Do not
   shorten the hotplug path.
 
+## A release is checked before anything changes
+
+`scripts/install.sh` without a checkout (piped from `curl`, or `--release`,
+`--version`) downloads `veil-x.y.z.tar.gz` and `SHA256SUMS` and verifies the
+archive before it validates, copies or enables anything; a mismatch leaves
+the machine as it was. It then runs the installer inside the archive, so the
+swap order above holds for releases too. `tests/install/run.sh` serves a
+release over `file://` and asserts both, including a tampered archive.
+`scripts/package.sh` must keep shipping `scripts/install.sh` next to
+`omarchy/arzaroth.veil/` (`tests/package/run.sh`).
+
 ## The snapshot is private and short-lived
 
 The lock fades from a capture of each monitor taken during the pre-lock wait
@@ -124,6 +135,7 @@ navigate and maintain it.
   tests/qml/run.sh
   tests/snapshot/run.sh
   tests/install/run.sh
+  tests/package/run.sh
   shellcheck omarchy/arzaroth.veil/bin/snapshot omarchy/arzaroth.veil/poster.sh scripts/*.sh tests/**/*.sh
   ```
 
