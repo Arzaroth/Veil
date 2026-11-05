@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ES2020",
+    "lib": ["ES2020"],
+    "types": [],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "removeComments": true,
+    "newLine": "lf",
+    "rootDir": "src",
+    "outDir": "omarchy/arzaroth.veil"
+  },
+  "include": ["src/**/*.mts"]
+}
