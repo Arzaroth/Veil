@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "id": "arzaroth.lock",
-  "name": "My Lock Screen",
-  "version": "1.0.0",
-  "author": "Omarchy",
-  "description": "Quickshell session lock with separate password and fingerprint PAM flows.",
+  "id": "arzaroth.veil",
+  "name": "Veil",
+  "version": "0.1.0",
+  "author": "Arzaroth",
+  "license": "MIT",
+  "description": "A calm lock screen for Omarchy: your windows blur into the wallpaper on lock, a clock, your name, battery and branding art while locked, and the same fade in reverse on unlock. Password and fingerprint checks are Omarchy's own.",
   "omarchy": {
     "capabilities": [
       "authentication"
-    ],
-    "clonedFrom": "omarchy.lock"
+    ]
   },
   "kinds": [
     "service"

@@ -2,7 +2,7 @@
 set -uo pipefail
 umask 077
 
-dir="${XDG_RUNTIME_DIR:?}/arzaroth-lock"
+dir="${XDG_RUNTIME_DIR:?}/arzaroth-veil"
 
 case "${1:-}" in
 capture)
