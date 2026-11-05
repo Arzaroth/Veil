@@ -4,7 +4,7 @@ export const HOTPLUG_WINDOW_MS = 2000;
 export const UNLOCK_FADE_MS = 450;
 export const INFO_SEPARATOR = "   ·   ";
 export function displayName(user) {
-    const name = String(user ?? "");
+    const name = String(user !== null && user !== void 0 ? user : "");
     return name.charAt(0).toUpperCase() + name.slice(1);
 }
 export function lockedForText(lockedAtMs, nowMs) {
@@ -21,22 +21,22 @@ export function lockedForText(lockedAtMs, nowMs) {
 export function batteryText(present, fraction, charging) {
     if (!present)
         return "";
-    const level = Math.round(Number(fraction ?? 0) * 100);
+    const level = Math.round(Number(fraction !== null && fraction !== void 0 ? fraction : 0) * 100);
     return `${charging ? "󰂄 " : "󰁹 "}${level}%`;
 }
 export function infoText(parts) {
     return parts.filter((part) => !!part).join(INFO_SEPARATOR);
 }
 export function brandingArt(text) {
-    return String(text ?? "").replace(/\s+$/, "");
+    return String(text !== null && text !== void 0 ? text : "").replace(/\s+$/, "");
 }
 export function stabilizeDelayMs(nowMs, screensChangedAtMs) {
     return nowMs - screensChangedAtMs < HOTPLUG_WINDOW_MS ? HOTPLUG_STABILIZE_MS : STABILIZE_MS;
 }
 export function screenNames(screens) {
     const names = [];
-    for (const screen of screens ?? []) {
-        if (screen?.name)
+    for (const screen of screens !== null && screens !== void 0 ? screens : []) {
+        if (screen === null || screen === void 0 ? void 0 : screen.name)
             names.push(screen.name);
     }
     return names;
@@ -46,7 +46,7 @@ export function snapshotCommand(pluginDir, epoch, names) {
 }
 export function parseSnapshots(text) {
     const files = {};
-    for (const line of String(text ?? "").split("\n")) {
+    for (const line of String(text !== null && text !== void 0 ? text : "").split("\n")) {
         const parts = line.split("\t");
         const [output, path] = parts;
         if (parts.length === 2 && output && path)
