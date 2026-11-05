@@ -22,6 +22,7 @@ Item {
   property bool unlocking: false
   property double lockedAtMs: 0
   property var snapshotFiles: ({})
+  property double screensChangedAtMs: 0
   property int snapshotEpoch: 0
   readonly property string pluginDir: Qt.resolvedUrl(".").toString().replace(/^file:\/\//, "").replace(/\/$/, "")
   property bool pendingSessionLock: false
@@ -98,6 +99,7 @@ Item {
   function queueSessionLock() {
     pendingSessionLock = true
     if (!sessionLockStabilizeTimer.running) logEvent("lock-pending: screen-stabilizing")
+    sessionLockStabilizeTimer.interval = Date.now() - screensChangedAtMs < 2000 ? 500 : 150
     sessionLockStabilizeTimer.restart()
     if (!pendingSessionLockTimer.running) pendingSessionLockTimer.start()
   }
@@ -879,7 +881,7 @@ Item {
 
   Timer {
     id: sessionLockStabilizeTimer
-    interval: 500
+    interval: 150
     repeat: false
     onTriggered: root.requestSessionLock()
   }
@@ -919,6 +921,11 @@ Item {
         if (root.lockRequested) root.armBlankTimer()
       }
       root.knownScreenCount = screens
+      root.screensChangedAtMs = Date.now()
+      if (sessionLockStabilizeTimer.running) {
+        sessionLockStabilizeTimer.interval = 500
+        sessionLockStabilizeTimer.restart()
+      }
       root.requestSessionLock()
 
       // A monitor still coming up has no workspace, so cannot answer yet.
