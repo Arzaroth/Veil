@@ -18,6 +18,9 @@ Item {
   readonly property string stateHome: home + "/.local/state"
   readonly property string userName: Quickshell.env("USER") || Quickshell.env("LOGNAME")
   readonly property string currentBackgroundLink: stateHome + "/omarchy/current/background"
+  readonly property string configPath: Model.configPath(Quickshell.env("XDG_CONFIG_HOME"), home)
+  property var settingsRead: ({ settings: {}, problems: [] })
+  readonly property var settings: Model.resolveSettings(settingsRead.settings, { user: userName, home: home })
 
   property bool lockRequested: false
   property bool unlocking: false
@@ -190,6 +193,20 @@ Item {
       settleFingerprintAttempt()
       fingerprintRetryTimer.stop()
     }
+  }
+
+  function applySettings(text) {
+    var read = Model.readSettings(text)
+    for (var i = 0; i < read.problems.length; i++) console.warn("veil: " + read.problems[i])
+    settingsRead = read
+  }
+
+  FileView {
+    path: root.configPath
+    watchChanges: true
+    onFileChanged: reload()
+    onLoaded: root.applySettings(text())
+    onLoadFailed: root.settingsRead = ({ settings: {}, problems: [] })
   }
 
   function logEvent(event) {
@@ -568,6 +585,7 @@ Item {
         unlocking: root.unlocking
         presented: sessionLock.secure
         lockedAtMs: root.lockedAtMs
+        settings: root.settings
         snapshotPath: lockSurface.screen ? (root.snapshotFiles[lockSurface.screen.name] || "") : ""
         loadBackground: root.locked
         passwordText: root.enteredPassword
@@ -606,6 +624,7 @@ Item {
       failedAttempts: 0
       inputEnabled: false
       loadBackground: root.previewVisible
+      settings: root.settings
       passwordText: ""
     }
 
@@ -850,7 +869,7 @@ Item {
 
   Timer {
     id: idleBlankTimer
-    readonly property int idleMs: 30000
+    readonly property int idleMs: root.settings.blankAfterMs
     // A resume reaches this as soon as the kernel thaws, seconds before the
     // panel lights (on NVIDIA it waits out a VT switch and a modeset), so the
     // idle run-up blanked the lock just as it appeared.

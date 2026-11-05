@@ -28,12 +28,13 @@ Item {
   property string passwordText: ""
   property bool syncingPasswordText: false
 
-  property string displayName: Model.displayName(Quickshell.env("USER"))
+  property var settings: Model.resolveSettings({}, { user: Quickshell.env("USER"), home: Quickshell.env("HOME") })
+  property string displayName: settings.displayName
   property string logoPath: (Quickshell.env("OMARCHY_PATH") || "/usr/share/omarchy") + "/logo.svg"
-  property string brandingPath: Quickshell.env("HOME") + "/.config/omarchy/branding/about.txt"
+  property string brandingPath: settings.brandingPath
   property string brandingArt: ""
-  property string timeFormat: "HH:mm"
-  property string dateFormat: "dddd d MMMM"
+  property string timeFormat: settings.timeFormat
+  property string dateFormat: settings.dateFormat
   property color ink: Qt.tint(Commons.Color.lock.text, Qt.rgba(1, 1, 1, 0.6))
 
   readonly property string placeholderText: Commons.I18n.t("lock.enterPassword")
