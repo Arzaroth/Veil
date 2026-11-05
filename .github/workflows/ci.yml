@@ -110,6 +110,9 @@ jobs:
       - name: Install script
         run: tests/install/run.sh
 
+      - name: Release archive
+        run: tests/package/run.sh
+
   coverage:
     runs-on: ubuntu-latest
     steps:
