@@ -32,6 +32,7 @@ Item {
   property string displayName: settings.displayName
   property string logoPath: (Quickshell.env("OMARCHY_PATH") || "/usr/share/omarchy") + "/logo.svg"
   property string brandingPath: settings.brandingPath
+  property bool showBranding: settings.showBranding
   property string brandingArt: ""
   property string timeFormat: settings.timeFormat
   property string dateFormat: settings.dateFormat
@@ -423,7 +424,8 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 48
-        visible: root.brandingArt.length > 0
+        objectName: "brandingArt"
+        visible: root.showBranding && root.brandingArt.length > 0
         textFormat: Text.PlainText
         text: root.brandingArt
         color: root.ink
@@ -436,10 +438,11 @@ Item {
 
       Item {
         id: logo
+        objectName: "brandingWordmark"
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 56
-        visible: root.brandingArt.length === 0
+        visible: root.showBranding && root.brandingArt.length === 0
         height: 24
         width: Math.round(height * 1215 / 285)
         opacity: 0.7

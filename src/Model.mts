@@ -73,6 +73,7 @@ export interface Settings {
   timeFormat?: string;
   dateFormat?: string;
   brandingPath?: string;
+  branding?: boolean;
   blankAfter?: number;
 }
 
@@ -81,6 +82,7 @@ export interface ResolvedSettings {
   readonly timeFormat: string;
   readonly dateFormat: string;
   readonly brandingPath: string;
+  readonly showBranding: boolean;
   readonly blankAfterMs: number;
 }
 
@@ -102,7 +104,7 @@ export const DEFAULTS = {
 } as const;
 
 const TEXT_KEYS = ["displayName", "timeFormat", "dateFormat", "brandingPath"] as const;
-const KNOWN_KEYS = new Set<string>(["id", ...TEXT_KEYS, "blankAfter"]);
+const KNOWN_KEYS = new Set<string>(["id", ...TEXT_KEYS, "branding", "blankAfter"]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -130,6 +132,11 @@ export function readSettings(configText: string | null | undefined, pluginId: st
     if (typeof value === "string" && value.trim().length > 0) settings[key] = value;
     else problems.push(`${key} must be a non-empty string; using the default`);
   }
+  const branding = entry["branding"];
+  if (branding !== undefined) {
+    if (typeof branding === "boolean") settings.branding = branding;
+    else problems.push("branding must be true or false; using the default");
+  }
   const blankAfter = entry["blankAfter"];
   if (blankAfter !== undefined) {
     if (typeof blankAfter === "number" && Number.isInteger(blankAfter)
@@ -155,6 +162,7 @@ export function resolveSettings(settings: Settings | null | undefined, env: Envi
     timeFormat: chosen.timeFormat ?? DEFAULTS.timeFormat,
     dateFormat: chosen.dateFormat ?? DEFAULTS.dateFormat,
     brandingPath: expandHome(chosen.brandingPath ?? DEFAULTS.brandingPath, env.home),
+    showBranding: chosen.branding ?? true,
     blankAfterMs: (chosen.blankAfter ?? DEFAULTS.blankAfter) * 1000,
   };
 }

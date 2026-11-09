@@ -47,6 +47,15 @@ describe("readSettings", () => {
     }
   });
 
+  test("branding is a boolean", () => {
+    const branding = (value) => Model.readSettings(config({ id: "arzaroth.veil", branding: value }));
+    expect(branding(false)).toEqual({ settings: { branding: false }, problems: [] });
+    expect(branding(true)).toEqual({ settings: { branding: true }, problems: [] });
+    for (const bad of ["false", 0, null]) {
+      expect(branding(bad)).toEqual({ settings: {}, problems: ["branding must be true or false; using the default"] });
+    }
+  });
+
   test("an unknown key is reported, so a typo is not silent", () => {
     expect(Model.readSettings(config({ id: "arzaroth.veil", timeformat: "HH" })).problems).toEqual(['unknown setting "timeformat" is ignored']);
   });
@@ -72,15 +81,17 @@ describe("resolveSettings", () => {
       timeFormat: "HH:mm",
       dateFormat: "dddd d MMMM",
       brandingPath: "/home/arzaroth/.config/omarchy/branding/about.txt",
+      showBranding: true,
       blankAfterMs: 30000,
     });
     expect(Model.resolveSettings(undefined, env).blankAfterMs).toBe(30000);
   });
   test("settings win over the defaults", () => {
     expect(Model.resolveSettings({ displayName: "Marc", timeFormat: "h:mm", dateFormat: "d", brandingPath: "~/art.txt", blankAfter: 90 }, env)).toEqual({
-      displayName: "Marc", timeFormat: "h:mm", dateFormat: "d", brandingPath: "/home/arzaroth/art.txt", blankAfterMs: 90000,
+      displayName: "Marc", timeFormat: "h:mm", dateFormat: "d", brandingPath: "/home/arzaroth/art.txt", showBranding: true, blankAfterMs: 90000,
     });
   });
+  test("branding: false hides it", () => expect(Model.resolveSettings({ branding: false }, env).showBranding).toBe(false));
 });
 
 describe("configPath", () => {

@@ -64,7 +64,7 @@ export const DEFAULTS = {
     blankAfter: 30,
 };
 const TEXT_KEYS = ["displayName", "timeFormat", "dateFormat", "brandingPath"];
-const KNOWN_KEYS = new Set(["id", ...TEXT_KEYS, "blankAfter"]);
+const KNOWN_KEYS = new Set(["id", ...TEXT_KEYS, "branding", "blankAfter"]);
 function isRecord(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -95,6 +95,13 @@ export function readSettings(configText, pluginId = PLUGIN_ID) {
         else
             problems.push(`${key} must be a non-empty string; using the default`);
     }
+    const branding = entry["branding"];
+    if (branding !== undefined) {
+        if (typeof branding === "boolean")
+            settings.branding = branding;
+        else
+            problems.push("branding must be true or false; using the default");
+    }
     const blankAfter = entry["blankAfter"];
     if (blankAfter !== undefined) {
         if (typeof blankAfter === "number" && Number.isInteger(blankAfter)
@@ -115,14 +122,15 @@ export function expandHome(path, home) {
     return path.startsWith("~/") ? `${home}${path.slice(1)}` : path;
 }
 export function resolveSettings(settings, env) {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d, _e, _f;
     const chosen = settings !== null && settings !== void 0 ? settings : {};
     return {
         displayName: (_a = chosen.displayName) !== null && _a !== void 0 ? _a : displayName(env.user),
         timeFormat: (_b = chosen.timeFormat) !== null && _b !== void 0 ? _b : DEFAULTS.timeFormat,
         dateFormat: (_c = chosen.dateFormat) !== null && _c !== void 0 ? _c : DEFAULTS.dateFormat,
         brandingPath: expandHome((_d = chosen.brandingPath) !== null && _d !== void 0 ? _d : DEFAULTS.brandingPath, env.home),
-        blankAfterMs: ((_e = chosen.blankAfter) !== null && _e !== void 0 ? _e : DEFAULTS.blankAfter) * 1000,
+        showBranding: (_e = chosen.branding) !== null && _e !== void 0 ? _e : true,
+        blankAfterMs: ((_f = chosen.blankAfter) !== null && _f !== void 0 ? _f : DEFAULTS.blankAfter) * 1000,
     };
 }
 export function configPath(xdgConfigHome, home) {
