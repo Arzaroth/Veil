@@ -89,7 +89,19 @@ describe("resolveSettings", () => {
       displayName: "Marc", timeFormat: "h:mm", dateFormat: "d", brandingPath: "/home/arzaroth/art.txt", showBranding: true, blankAfterMs: 90000,
     });
   });
+  test("unset formats follow the bar clock", () => {
+    const bar = (clockFormat, settings = {}) => Model.resolveSettings(settings, { ...env, clockFormat });
+    expect(bar("ddd d MMM h:mm AP")).toMatchObject({ timeFormat: "h:mm AP", dateFormat: "ddd d MMM" });
+    expect(bar("HH:mm:ss")).toMatchObject({ timeFormat: "HH:mm", dateFormat: Model.DEFAULTS.dateFormat });
+    expect(bar("d MMMM 'W'ww yyyy")).toMatchObject({ timeFormat: Model.DEFAULTS.timeFormat, dateFormat: "d MMMM 'W'ww yyyy" });
+    expect(bar("ddd d MMM h:mm AP", { timeFormat: "HH", dateFormat: "d" })).toMatchObject({ timeFormat: "HH", dateFormat: "d" });
+  });
   test("branding: false hides it", () => expect(Model.resolveSettings({ branding: false }, env).showBranding).toBe(false));
+});
+
+describe("shellConfigPath", () => {
+  test("follows XDG_CONFIG_HOME", () => expect(Model.shellConfigPath("/x/conf", "/home/u")).toBe("/x/conf/omarchy/shell.json"));
+  test("falls back to ~/.config", () => expect(Model.shellConfigPath("", "/home/u")).toBe("/home/u/.config/omarchy/shell.json"));
 });
 
 describe("configPath", () => {

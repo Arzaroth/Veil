@@ -20,7 +20,9 @@ Item {
   readonly property string currentBackgroundLink: stateHome + "/omarchy/current/background"
   readonly property string configPath: Model.configPath(Quickshell.env("XDG_CONFIG_HOME"), home)
   property var settingsRead: ({ settings: {}, problems: [] })
-  readonly property var settings: Model.resolveSettings(settingsRead.settings, { user: userName, home: home })
+  readonly property string shellConfigPath: Model.shellConfigPath(Quickshell.env("XDG_CONFIG_HOME"), home)
+  property string barClockFormat: ""
+  readonly property var settings: Model.resolveSettings(settingsRead.settings, { user: userName, home: home, clockFormat: barClockFormat })
 
   property bool lockRequested: false
   property bool unlocking: false
@@ -214,6 +216,14 @@ Item {
       root.settingsRead = ({ settings: {}, problems: [] })
       settingsRetryTimer.start()
     }
+  }
+
+  FileView {
+    path: root.shellConfigPath
+    watchChanges: true
+    onFileChanged: reload()
+    onLoaded: root.barClockFormat = Model.barClockFormat(text())
+    onLoadFailed: root.barClockFormat = ""
   }
 
   // FileView only watches a file that existed when it was read.

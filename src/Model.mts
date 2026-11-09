@@ -271,6 +271,7 @@ export interface SettingsRead {
 export interface Environment {
   readonly user?: string | null;
   readonly home?: string | null;
+  readonly clockFormat?: string | null;
 }
 
 export const DEFAULTS = {
@@ -324,10 +325,11 @@ export function expandHome(path: string, home: string | null | undefined): strin
 
 export function resolveSettings(settings: Settings | null | undefined, env: Environment): ResolvedSettings {
   const chosen = settings ?? {};
+  const bar = splitClockFormat(env.clockFormat);
   return {
     displayName: chosen.displayName ?? displayName(env.user),
-    timeFormat: chosen.timeFormat ?? DEFAULTS.timeFormat,
-    dateFormat: chosen.dateFormat ?? DEFAULTS.dateFormat,
+    timeFormat: chosen.timeFormat ?? (bar.time || DEFAULTS.timeFormat),
+    dateFormat: chosen.dateFormat ?? (bar.date || DEFAULTS.dateFormat),
     brandingPath: expandHome(chosen.brandingPath ?? DEFAULTS.brandingPath, env.home),
     showBranding: chosen.branding ?? true,
     blankAfterMs: (chosen.blankAfter ?? DEFAULTS.blankAfter) * 1000,
@@ -336,4 +338,8 @@ export function resolveSettings(settings: Settings | null | undefined, env: Envi
 
 export function configPath(xdgConfigHome: string | null | undefined, home: string | null | undefined): string {
   return `${xdgConfigHome || `${home ?? ""}/.config`}/veil/config.toml`;
+}
+
+export function shellConfigPath(xdgConfigHome: string | null | undefined, home: string | null | undefined): string {
+  return `${xdgConfigHome || `${home ?? ""}/.config`}/omarchy/shell.json`;
 }

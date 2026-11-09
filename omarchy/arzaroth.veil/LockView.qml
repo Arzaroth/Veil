@@ -254,7 +254,7 @@ Item {
         Text {
           anchors.horizontalCenter: parent.horizontalCenter
           textFormat: Text.PlainText
-          text: Qt.locale().toString(new Date(root.now), root.dateFormat)
+          text: Qt.locale().toString(new Date(root.now), Model.withIsoWeek(root.dateFormat, new Date(root.now)))
           color: root.ink
           opacity: 0.9
           font.family: Style.font.family
