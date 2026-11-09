@@ -39,10 +39,10 @@ Item {
             check.equal("the branding art is read and its trailing blank lines trimmed", view.brandingArt, "  ⣿⣿\n ⣿⣿⣿")
             check.equal("the art is shown", find(view, "brandingArt").visible, true)
             check.equal("and the wordmark is not", find(view, "brandingWordmark").visible, false)
-            view.showBranding = false
+            view.settings = Model.resolveSettings({ branding: false }, { user: "arzaroth", home: "/home/arzaroth" })
             check.equal("branding off hides the art", find(view, "brandingArt").visible, false)
             check.equal("and does not bring the wordmark back", find(view, "brandingWordmark").visible, false)
-            view.showBranding = true
+            view.settings = Model.resolveSettings({}, { user: "arzaroth", home: "/home/arzaroth" })
             check.equal("still hidden while the lock is not on screen", view.reveal, 0)
             view.presented = true
         } },
@@ -62,9 +62,9 @@ Item {
         { after: 600, run: function () {
             check.equal("a missing branding file falls back to the wordmark", view.brandingArt, "")
             check.equal("the wordmark is shown", find(view, "brandingWordmark").visible, true)
-            view.showBranding = false
+            view.settings = Model.resolveSettings({ branding: false }, { user: "arzaroth", home: "/home/arzaroth" })
             check.equal("branding off hides the wordmark too", find(view, "brandingWordmark").visible, false)
-            view.showBranding = true
+            view.settings = Model.resolveSettings({}, { user: "arzaroth", home: "/home/arzaroth" })
             check.equal("the default time format", view.timeFormat, "HH:mm")
             check.equal("the default date format", view.dateFormat, "dddd d MMMM")
             view.settings = Model.resolveSettings(
