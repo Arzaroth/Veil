@@ -76,6 +76,12 @@ Item {
             check.equal("a config.toml time format reaches the view", view.timeFormat, "h:mm AP")
             check.equal("a config.toml date format reaches the view", view.dateFormat, "d MMM")
             check.equal("and the default branding path is home-expanded", view.settings.brandingPath, "/home/arzaroth/.config/omarchy/branding/about.txt")
+            view.settings = Model.resolveSettings({}, { user: "arzaroth", home: "/home/arzaroth", clockFormat: "ddd d MMM h:mm:ss AP", fullName: "Marc-Etienne Barrut" })
+        } },
+        { run: function () {
+            check.equal("the full name reaches the view", view.displayName, "Marc-Etienne Barrut")
+            check.equal("the bar clock's time, without seconds", view.timeFormat, "h:mm AP")
+            check.equal("the bar clock's date", view.dateFormat, "ddd d MMM")
         } }
     ])
 }
