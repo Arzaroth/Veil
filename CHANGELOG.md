@@ -7,21 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- `branding = false` hides the art at the bottom, and the Omarchy wordmark
-  with it. To show your own art instead of Omarchy's, point `branding_path`
-  at it.
-
-- Without `time_format` and `date_format`, the clock and the date follow the
-  bar clock's format, seconds left out. The date follows only when the bar
-  shows a day and a month, so the stock bar keeps the full date. `ww` in a date format shows the ISO
-  week, as on the bar.
-
 ### Changed
-
-- Without `display_name`, the name is your full name from `/etc/passwd`
-  (`chfn -f`), and your capitalized login only when that is empty.
 
 - Settings moved from Veil's entry in `~/.config/omarchy/shell.json` to
   Veil's own `~/.config/veil/config.toml`, with snake_case keys:
@@ -29,6 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `blank_after`. Settings left in `shell.json` are no longer used: the journal
   names them (`veil: ...`) so you can move them. Disabling the plugin no
   longer forgets them.
+- Without `display_name`, the name is your full name from `/etc/passwd`
+  (`chfn -f`), and your capitalized login only when that is empty.
+
+### Added
+
+- `branding = false` hides the art at the bottom, and the Omarchy wordmark
+  with it. To show your own art instead of Omarchy's, point `branding_path`
+  at it.
+- Without `time_format` and `date_format`, the clock and the date follow the
+  bar clock's format, seconds left out. The date follows only when the bar
+  shows a day and a month, so the stock bar keeps the full date. `ww` in a
+  date format shows the ISO week, as on the bar.
 
 ## [0.1.0] - 2026-11-05
 

@@ -13,7 +13,8 @@ doc lands in `brain/features/`.
 - [x] `scripts/install.sh` and `--uninstall`.
 - [x] The brain, and the `brain`, `feature-treatment`, `release` and
   `upstream-check` skills.
-- [x] Settings, in `~/.config/veil/config.toml` since 0.2.0 (was M1, see `brain/features/settings.md`).
+- [x] Settings, in `~/.config/veil/config.toml` since 0.2.0 (was M1, see
+  `brain/features/settings.md`).
 - [x] Releases and the `curl | bash` installer (was M2, see
   `brain/architecture/distribution.md`).
 
