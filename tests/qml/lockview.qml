@@ -11,6 +11,15 @@ Item {
 
     Check { id: check; name: "lockview" }
 
+    function find(item, name) {
+        if (item.objectName === name) return item
+        for (let i = 0; i < item.children.length; i++) {
+            const found = find(item.children[i], name)
+            if (found) return found
+        }
+        return null
+    }
+
     Veil.LockView {
         id: view
         anchors.fill: parent
@@ -28,6 +37,12 @@ Item {
         } },
         { after: 600, run: function () {
             check.equal("the branding art is read and its trailing blank lines trimmed", view.brandingArt, "  ⣿⣿\n ⣿⣿⣿")
+            check.equal("the art is shown", find(view, "brandingArt").visible, true)
+            check.equal("and the wordmark is not", find(view, "brandingWordmark").visible, false)
+            view.showBranding = false
+            check.equal("branding off hides the art", find(view, "brandingArt").visible, false)
+            check.equal("and does not bring the wordmark back", find(view, "brandingWordmark").visible, false)
+            view.showBranding = true
             check.equal("still hidden while the lock is not on screen", view.reveal, 0)
             view.presented = true
         } },
@@ -46,6 +61,10 @@ Item {
         } },
         { after: 600, run: function () {
             check.equal("a missing branding file falls back to the wordmark", view.brandingArt, "")
+            check.equal("the wordmark is shown", find(view, "brandingWordmark").visible, true)
+            view.showBranding = false
+            check.equal("branding off hides the wordmark too", find(view, "brandingWordmark").visible, false)
+            view.showBranding = true
             check.equal("the default time format", view.timeFormat, "HH:mm")
             check.equal("the default date format", view.dateFormat, "dddd d MMMM")
             view.settings = Model.resolveSettings(
