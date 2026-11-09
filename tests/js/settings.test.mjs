@@ -105,6 +105,20 @@ describe("resolveSettings", () => {
   test("branding: false hides it", () => expect(Model.resolveSettings({ branding: false }, env).showBranding).toBe(false));
 });
 
+describe("staleShellSettings", () => {
+  const shell = (plugins) => JSON.stringify({ bar: {}, plugins });
+  test("names the keys a 0.1.0 entry still carries", () => {
+    expect(Model.staleShellSettings(shell([{ id: "other", x: 1 }, { id: "arzaroth.veil", displayName: "Marc", blankAfter: 60 }]), "arzaroth.veil"))
+      .toBe("settings on arzaroth.veil in shell.json are no longer read (displayName, blankAfter); move them to ~/.config/veil/config.toml");
+  });
+  test("nothing to say for a bare entry, no entry or no JSON", () => {
+    expect(Model.staleShellSettings(shell([{ id: "arzaroth.veil" }]), "arzaroth.veil")).toBe("");
+    expect(Model.staleShellSettings(shell([{ id: "other", x: 1 }, null]), "arzaroth.veil")).toBe("");
+    expect(Model.staleShellSettings(JSON.stringify({ bar: {} }), "arzaroth.veil")).toBe("");
+    expect(Model.staleShellSettings("{ nope", "arzaroth.veil")).toBe("");
+  });
+});
+
 describe("shellConfigPath", () => {
   test("follows XDG_CONFIG_HOME", () => expect(Model.shellConfigPath("/x/conf", "/home/u")).toBe("/x/conf/omarchy/shell.json"));
   test("falls back to ~/.config", () => expect(Model.shellConfigPath("", "/home/u")).toBe("/home/u/.config/omarchy/shell.json"));

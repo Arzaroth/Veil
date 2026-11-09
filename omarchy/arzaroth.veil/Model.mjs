@@ -133,6 +133,21 @@ export function barClockFormat(shellJson) {
     }
     return found ? BAR_CLOCK_DEFAULT_FORMAT : "";
 }
+export function staleShellSettings(shellJson, pluginId) {
+    let config;
+    try {
+        config = JSON.parse(String(shellJson !== null && shellJson !== void 0 ? shellJson : ""));
+    }
+    catch (error) {
+        return "";
+    }
+    const plugins = isRecord(config) ? config["plugins"] : undefined;
+    const entry = Array.isArray(plugins) ? plugins.find((item) => isRecord(item) && item["id"] === pluginId) : undefined;
+    const keys = isRecord(entry) ? Object.keys(entry).filter((key) => key !== "id") : [];
+    if (keys.length === 0)
+        return "";
+    return `settings on ${pluginId} in shell.json are no longer read (${keys.join(", ")}); move them to ~/.config/veil/config.toml`;
+}
 export function isoWeek(date) {
     const day = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
     day.setUTCDate(day.getUTCDate() + 4 - (day.getUTCDay() || 7));

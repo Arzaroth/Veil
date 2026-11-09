@@ -208,6 +208,13 @@ Item {
 
   // FileView only watches a file that existed when it was read, so a missing
   // one is read again when the lock or the preview needs it.
+  property string staleShellWarning: ""
+
+  function warnStaleShellSettings(warning) {
+    if (warning !== "" && warning !== staleShellWarning) console.warn("veil: " + warning)
+    staleShellWarning = warning
+  }
+
   function rereadMissingConfig() {
     if (settingsMissing) settingsFile.reload()
     if (shellConfigMissing) shellConfigFile.reload()
@@ -239,6 +246,7 @@ Item {
     onLoaded: {
       root.shellConfigMissing = false
       root.barClockFormat = Model.barClockFormat(text())
+      root.warnStaleShellSettings(Model.staleShellSettings(text(), "arzaroth.veil"))
     }
     onLoadFailed: {
       root.shellConfigMissing = true
