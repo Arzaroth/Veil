@@ -54,6 +54,90 @@ export function parseSnapshots(text) {
     }
     return files;
 }
+const TOML_ESCAPES = { b: "\b", t: "\t", n: "\n", f: "\f", r: "\r", "\"": "\"", "\\": "\\" };
+function tomlBasicString(body) {
+    let out = "";
+    for (let i = 0; i < body.length; i++) {
+        const c = body.charAt(i);
+        if (c === "\"")
+            return null;
+        if (c !== "\\") {
+            out += c;
+            continue;
+        }
+        const e = body.charAt(++i);
+        if (e in TOML_ESCAPES) {
+            out += TOML_ESCAPES[e];
+        }
+        else if (e === "u" || e === "U") {
+            const width = e === "u" ? 4 : 8;
+            const hex = body.slice(i + 1, i + 1 + width);
+            if (!/^[0-9A-Fa-f]+$/.test(hex) || hex.length !== width)
+                return null;
+            const code = parseInt(hex, 16);
+            if (code > 0x10ffff)
+                return null;
+            out += String.fromCodePoint(code);
+            i += width;
+        }
+        else {
+            return null;
+        }
+    }
+    return out;
+}
+function tomlValue(raw) {
+    var _a, _b, _c, _d;
+    const basic = /^"((?:[^"\\]|\\.)*)"\s*(?:#.*)?$/.exec(raw);
+    if (basic)
+        return (_b = tomlBasicString((_a = basic[1]) !== null && _a !== void 0 ? _a : "")) !== null && _b !== void 0 ? _b : undefined;
+    const literal = /^'([^']*)'\s*(?:#.*)?$/.exec(raw);
+    if (literal)
+        return (_c = literal[1]) !== null && _c !== void 0 ? _c : "";
+    const bare = /^([^\s#]+)\s*(?:#.*)?$/.exec(raw);
+    const word = (_d = bare === null || bare === void 0 ? void 0 : bare[1]) !== null && _d !== void 0 ? _d : "";
+    if (word === "true")
+        return true;
+    if (word === "false")
+        return false;
+    if (/^[+-]?(?:0|[1-9](?:_?\d)*)$/.test(word))
+        return Number(word.replace(/_/g, ""));
+    return undefined;
+}
+export function parseToml(text) {
+    const values = {};
+    const problems = [];
+    let table = "";
+    String(text !== null && text !== void 0 ? text : "").replace(/^﻿/, "").split(/\r?\n/).forEach((line, index) => {
+        var _a;
+        const at = `line ${index + 1}`;
+        const trimmed = line.trim();
+        if (trimmed === "" || trimmed.startsWith("#"))
+            return;
+        const header = /^\[\s*([^\]]*?)\s*\]\s*(?:#.*)?$/.exec(trimmed);
+        if (header) {
+            table = header[1] || "?";
+            problems.push(`${at}: Veil has no [${table}] table; its keys are ignored`);
+            return;
+        }
+        const pair = /^([A-Za-z0-9_-]+)\s*=\s*(.*)$/.exec(trimmed);
+        if (!pair) {
+            problems.push(`${at}: not a key = value line; ignored`);
+            return;
+        }
+        if (table)
+            return;
+        const key = pair[1];
+        const value = tomlValue((_a = pair[2]) !== null && _a !== void 0 ? _a : "");
+        if (value === undefined)
+            problems.push(`${at}: ${key} has a value Veil cannot read; ignored`);
+        else if (key in values)
+            problems.push(`${at}: ${key} is set twice; the first one is kept`);
+        else
+            values[key] = value;
+    });
+    return { values, problems };
+}
 export const PLUGIN_ID = "arzaroth.veil";
 export const BLANK_AFTER_MIN_S = 5;
 export const BLANK_AFTER_MAX_S = 3600;
