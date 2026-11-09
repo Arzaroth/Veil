@@ -101,6 +101,7 @@ export function splitClockFormat(format) {
 }
 export const BAR_CLOCK_ID = "omarchy.clock";
 export const BAR_CLOCK_DEFAULT_FORMAT = "dddd HH:mm";
+export const BAR_SECTIONS = ["left", "centerBegin", "center", "centerEnd", "right", "tray"];
 export function barClockFormat(shellJson) {
     let config;
     try {
@@ -110,18 +111,24 @@ export function barClockFormat(shellJson) {
         return "";
     }
     const bar = isRecord(config) ? config["bar"] : undefined;
-    if (!isRecord(bar))
+    const layout = isRecord(bar) ? bar["layout"] : undefined;
+    if (!isRecord(layout))
         return "";
-    for (const section of Object.values(bar)) {
+    let found = false;
+    for (const name of BAR_SECTIONS) {
+        const section = layout[name];
         if (!Array.isArray(section))
             continue;
-        const clock = section.find((item) => isRecord(item) && item["id"] === BAR_CLOCK_ID);
-        if (!isRecord(clock))
-            continue;
-        const format = clock["format"];
-        return typeof format === "string" && format.trim().length > 0 ? format : BAR_CLOCK_DEFAULT_FORMAT;
+        for (const item of section) {
+            if (!isRecord(item) || item["id"] !== BAR_CLOCK_ID)
+                continue;
+            const format = item["format"];
+            if (typeof format === "string" && format.trim().length > 0)
+                return format;
+            found = true;
+        }
     }
-    return "";
+    return found ? BAR_CLOCK_DEFAULT_FORMAT : "";
 }
 export function isoWeek(date) {
     const day = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));

@@ -1,4 +1,6 @@
 import { describe, expect, test } from "vitest";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import * as Model from "../../src/Model.mts";
 
 describe("splitClockFormat", () => {
@@ -26,20 +28,31 @@ describe("splitClockFormat", () => {
 });
 
 describe("barClockFormat", () => {
-  const shell = (bar) => JSON.stringify({ bar, plugins: [] });
+  const shell = (layout, bar = {}) => JSON.stringify({ bar: { position: "top", ...bar, layout }, plugins: [] });
 
   test("the clock's format, wherever it sits on the bar", () => {
     expect(Model.barClockFormat(shell({ left: [{ id: "omarchy.menu" }], center: [{ id: "omarchy.clock", format: "ddd d MMM HH:mm" }] }))).toBe("ddd d MMM HH:mm");
-    expect(Model.barClockFormat(shell({ position: "top", right: [{ id: "omarchy.clock", format: "h:mm AP" }] }))).toBe("h:mm AP");
+    expect(Model.barClockFormat(shell({ tray: [{ id: "omarchy.clock", format: "h:mm AP" }] }))).toBe("h:mm AP");
   });
 
-  test("a clock without a format shows the bar's default", () => {
+  test("Omarchy's own default shell.json", () => {
+    expect(Model.barClockFormat(readFileSync(fileURLToPath(new URL("fixtures/omarchy-shell.json", import.meta.url)), "utf8"))).toBe("dddd HH:mm");
+  });
+
+  test("a clock without a format shows the bar's default, unless another clock has one", () => {
     expect(Model.barClockFormat(shell({ center: [{ id: "omarchy.clock" }] }))).toBe(Model.BAR_CLOCK_DEFAULT_FORMAT);
     expect(Model.barClockFormat(shell({ center: [{ id: "omarchy.clock", format: " " }] }))).toBe(Model.BAR_CLOCK_DEFAULT_FORMAT);
+    expect(Model.barClockFormat(shell({ left: [{ id: "omarchy.clock" }], right: [{ id: "omarchy.clock", format: "HH:mm" }] }))).toBe("HH:mm");
   });
 
-  test("no clock, no bar or no JSON gives nothing", () => {
-    expect(Model.barClockFormat(shell({ center: [{ id: "omarchy.menu" }, null] }))).toBe("");
+  test("sections are read in the bar's order, and only the bar's sections", () => {
+    expect(Model.barClockFormat(shell({ right: [{ id: "omarchy.clock", format: "B" }], left: [{ id: "omarchy.clock", format: "A" }] }))).toBe("A");
+    expect(Model.barClockFormat(shell({ elsewhere: [{ id: "omarchy.clock", format: "A" }] }))).toBe("");
+  });
+
+  test("no clock, no layout or no JSON gives nothing", () => {
+    expect(Model.barClockFormat(shell({ center: [{ id: "omarchy.menu" }, null], left: "x" }))).toBe("");
+    expect(Model.barClockFormat(JSON.stringify({ bar: { center: [{ id: "omarchy.clock", format: "HH" }] } }))).toBe("");
     expect(Model.barClockFormat(JSON.stringify({ plugins: [] }))).toBe("");
     expect(Model.barClockFormat(JSON.stringify([1]))).toBe("");
     expect(Model.barClockFormat("{ nope")).toBe("");
