@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `"branding": false` in Veil's settings hides the art at the bottom, and the
+  Omarchy wordmark with it. To show your own art instead of Omarchy's, point
+  `brandingPath` at it.
+
 ## [0.1.0] - 2026-11-05
 
 ### Added

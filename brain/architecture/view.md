@@ -28,8 +28,9 @@ hold). `started` turns true just after creation. See
   date, name, info line and art use it; the field's placeholder uses it at
   60% alpha. Errors keep `lock.textError`.
 - `settings` is the resolved settings object from the service (defaults when
-  the view is created on its own); `displayName`, `timeFormat`, `dateFormat`
-  and `brandingPath` bind to it.
+  the view is created on its own); `displayName`, `timeFormat`, `dateFormat`,
+  `brandingPath` and `showBranding` bind to it. `showBranding` gates both the
+  art and the wordmark.
 - `lockedForText`, `batteryText`, `infoText` and `brandingArt`
   come from `Model.mjs` (`src/Model.mts`). `now` ticks every second.
 - The branding file is read with `FileView` and watched, so editing it

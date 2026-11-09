@@ -24,6 +24,7 @@
 - **Ink** - `LockView.ink`, the theme's lock text colour tinted 60% towards
   white, used for the clock, date, name, info line and art.
 - **Branding art** - the text art at the bottom, read from `brandingPath`.
+  Off with `"branding": false`.
   Avoid: logo (that is the wordmark fallback).
 - **Settings** - the keys on Veil's `plugins[]` entry in `shell.json`, read
   by `Model.readSettings`. See [features/settings.md](features/settings.md).

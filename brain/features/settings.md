@@ -11,6 +11,7 @@ at once, including on an open lock screen.
 | `timeFormat` | non-empty string, Qt format | `HH:mm` |
 | `dateFormat` | non-empty string, Qt format | `dddd d MMMM` |
 | `brandingPath` | non-empty string, `~` expanded | `~/.config/omarchy/branding/about.txt` |
+| `branding` | boolean | `true` |
 | `blankAfter` | whole seconds, 5 to 3600 | `30` |
 
 A wrong type, a value out of range, an unknown key (a typo such as

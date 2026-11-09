@@ -63,6 +63,7 @@ install script adds to `plugins`. Changes apply as soon as the file is saved.
     "timeFormat": "HH:mm",
     "dateFormat": "dddd d MMMM",
     "brandingPath": "~/.config/omarchy/branding/about.txt",
+    "branding": true,
     "blankAfter": 30
   }
 ]
@@ -73,7 +74,8 @@ install script adds to `plugins`. Changes apply as soon as the file is saved.
 | `displayName` | your login, capitalized | the name above the field |
 | `timeFormat` | `HH:mm` | Qt date format |
 | `dateFormat` | `dddd d MMMM` | Qt date format, in your locale |
-| `brandingPath` | `~/.config/omarchy/branding/about.txt` | text art at the bottom; missing or empty shows the Omarchy wordmark |
+| `brandingPath` | `~/.config/omarchy/branding/about.txt` | text art at the bottom; point it at your own file to replace Omarchy's. Missing or empty shows the Omarchy wordmark |
+| `branding` | `true` | `false` hides the art and the Omarchy wordmark |
 | `blankAfter` | `30` | seconds without input before the screens blank, 5 to 3600 |
 
 Every key is optional. A value of the wrong type, or a key Veil does not know,

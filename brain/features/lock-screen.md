@@ -12,7 +12,8 @@ What each monitor shows while locked, top to bottom:
   Parts without data are left out.
 - **Branding art** at the bottom, from `brandingPath` (default
   `~/.config/omarchy/branding/about.txt`, the fastfetch art), watched for
-  changes. Missing or empty shows the Omarchy wordmark instead.
+  changes. Missing or empty shows the Omarchy wordmark instead, and
+  `"branding": false` hides both.
 
 All text uses the theme's lock colour lightened (`ink`) over a dimmed, blurred
 wallpaper. The name, formats and art path are settings: see
