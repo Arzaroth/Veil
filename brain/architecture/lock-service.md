@@ -42,12 +42,14 @@ the snapshots are cleared.
 ## Settings
 
 A `FileView` (`settingsFile`) watches `configPath`
-(`~/.config/veil/config.toml`), and `settingsRetryTimer` reloads it every 5 s
-while it is missing; each load goes through
+(`~/.config/veil/config.toml`); a missing file is read again on each lock
+request and preview (`rereadMissingConfig`, from `onLockRequestedChanged` and
+`onPreviewVisibleChanged`, not from `beginLock`); each load goes through
 `Model.readSettings` (problems logged as `veil: ...`) into `settingsRead`, and
 `settings` is `Model.resolveSettings` of it with the user, home,
-`barClockFormat` (a second watched `FileView` on `shell.json`, read only) and
-`fullName` (a `getent passwd` `Process` at start). Both the
+`barClockFormat` (`shellConfigFile`, a second watched `FileView` on
+`shell.json`, read only) and `fullName` (`fullNameProc`, `getent passwd` at
+start). Both the
 lock surfaces' views and the preview get `settings`. See
 [../features/settings.md](../features/settings.md).
 
@@ -61,5 +63,7 @@ the displays go off. `resumeMs` (15 s after a resume) is upstream's.
 - `omarchy/arzaroth.veil/Service.qml`: `beginLock`, `queueSessionLock`,
   `requestSessionLock`, `captureSnapshots`, `dropSnapshots`, `finishUnlock`,
   `releaseLock`, `snapshotProc`, `snapshotCleanTimer`, `unlockFadeTimer`,
-  `idleBlankTimer`
+  `idleBlankTimer`; the settings block: `settingsFile`, `shellConfigFile`,
+  `fullNameProc`, `applySettings`, `rereadMissingConfig`,
+  `warnStaleShellSettings`, `onLockRequestedChanged`, `onPreviewVisibleChanged`
 - `src/Model.mts`, `omarchy/arzaroth.veil/bin/snapshot`

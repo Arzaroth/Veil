@@ -76,13 +76,18 @@ blank_after = 30
 
 Without `time_format` and `date_format`, the lock follows the bar clock's
 format (the one right-click cycles through): `ddd d MMM h:mm AP` gives a
-`h:mm AP` clock over `ddd d MMM`. Seconds are left out, and a part the bar does
-not show falls back to Veil's default.
+`h:mm AP` clock over `ddd d MMM`. Seconds are left out. The date is taken only
+when the bar shows a day and a month, so the stock `dddd HH:mm` keeps Veil's
+`dddd d MMMM`.
 
 Every key is optional. A value of the wrong type, a key Veil does not know or
 a line it cannot read is ignored with a warning in `journalctl --user`
 (`veil: ...`). Veil reads flat `key = value` lines only: no tables, arrays or
-multi-line strings.
+multi-line strings. A file created while the shell runs applies from the next
+lock.
+
+Coming from 0.1.0: settings on Veil's entry in `~/.config/omarchy/shell.json`
+are no longer read, and the journal says which ones to move.
 
 ## How it works
 

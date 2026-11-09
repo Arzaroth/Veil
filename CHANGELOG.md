@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   at it.
 
 - Without `time_format` and `date_format`, the clock and the date follow the
-  bar clock's format, seconds left out. `ww` in a date format shows the ISO
+  bar clock's format, seconds left out. The date follows only when the bar
+  shows a day and a month, so the stock bar keeps the full date. `ww` in a date format shows the ISO
   week, as on the bar.
 
 ### Changed
@@ -25,8 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Settings moved from Veil's entry in `~/.config/omarchy/shell.json` to
   Veil's own `~/.config/veil/config.toml`, with snake_case keys:
   `display_name`, `time_format`, `date_format`, `branding_path`,
-  `blank_after`. `shell.json` is no longer read, so copy any settings you had
-  there into the new file. Disabling the plugin no longer forgets them.
+  `blank_after`. Settings left in `shell.json` are no longer used: the journal
+  names them (`veil: ...`) so you can move them. Disabling the plugin no
+  longer forgets them.
 
 ## [0.1.0] - 2026-11-05
 

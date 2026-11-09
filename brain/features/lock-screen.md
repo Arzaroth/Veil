@@ -5,8 +5,10 @@ What each monitor shows while locked, top to bottom:
 - **Clock** (`time_format`) and **date** (`date_format`, in your locale).
   Unset, both follow the bar clock (`omarchy.clock`'s `format` in
   `shell.json`, `Model.barClockFormat`), split by `Model.splitClockFormat`
-  into its time and date parts with seconds dropped; a part the bar lacks
-  falls back to `HH:mm` / `dddd d MMMM`. `ww` in the date is the ISO week
+  into its time and date parts with seconds dropped. A time part needs an
+  hour or a minute, and a date part a day of the month and a month, or the
+  default is used (`HH:mm` / `dddd d MMMM`): Omarchy's stock `dddd HH:mm`
+  gives `HH:mm` over `dddd d MMMM`, not a bare weekday. `ww` in the date is the ISO week
   (`Model.withIsoWeek`), as the bar does it.
 - **Name** (`display_name`). Unset, the GECOS full name (`getent passwd`,
   `Model.gecosName`, `&` is the login), else the login capitalized.
