@@ -22,7 +22,8 @@ Item {
   property var settingsRead: ({ settings: {}, problems: [] })
   readonly property string shellConfigPath: Model.shellConfigPath(Quickshell.env("XDG_CONFIG_HOME"), home)
   property string barClockFormat: ""
-  readonly property var settings: Model.resolveSettings(settingsRead.settings, { user: userName, home: home, clockFormat: barClockFormat })
+  property string fullName: ""
+  readonly property var settings: Model.resolveSettings(settingsRead.settings, { user: userName, home: home, clockFormat: barClockFormat, fullName: fullName })
 
   property bool lockRequested: false
   property bool unlocking: false
@@ -224,6 +225,15 @@ Item {
     onFileChanged: reload()
     onLoaded: root.barClockFormat = Model.barClockFormat(text())
     onLoadFailed: root.barClockFormat = ""
+  }
+
+  Process {
+    running: root.userName !== ""
+    command: ["getent", "passwd", root.userName]
+    stdout: StdioCollector {
+      waitForEnd: true
+      onStreamFinished: root.fullName = Model.gecosName(text, root.userName)
+    }
   }
 
   // FileView only watches a file that existed when it was read.

@@ -292,7 +292,7 @@ export function resolveSettings(settings, env) {
     const chosen = settings !== null && settings !== void 0 ? settings : {};
     const bar = splitClockFormat(env.clockFormat);
     return {
-        displayName: (_a = chosen.displayName) !== null && _a !== void 0 ? _a : displayName(env.user),
+        displayName: (_a = chosen.displayName) !== null && _a !== void 0 ? _a : (env.fullName || displayName(env.user)),
         timeFormat: (_b = chosen.timeFormat) !== null && _b !== void 0 ? _b : (bar.time || DEFAULTS.timeFormat),
         dateFormat: (_c = chosen.dateFormat) !== null && _c !== void 0 ? _c : (bar.date || DEFAULTS.dateFormat),
         brandingPath: expandHome((_d = chosen.brandingPath) !== null && _d !== void 0 ? _d : DEFAULTS.brandingPath, env.home),

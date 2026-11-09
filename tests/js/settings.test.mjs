@@ -89,6 +89,11 @@ describe("resolveSettings", () => {
       displayName: "Marc", timeFormat: "h:mm", dateFormat: "d", brandingPath: "/home/arzaroth/art.txt", showBranding: true, blankAfterMs: 90000,
     });
   });
+  test("the name is the full name when the system has one", () => {
+    expect(Model.resolveSettings({}, { ...env, fullName: "Marc-Etienne Barrut" }).displayName).toBe("Marc-Etienne Barrut");
+    expect(Model.resolveSettings({}, { ...env, fullName: "" }).displayName).toBe("Arzaroth");
+    expect(Model.resolveSettings({ displayName: "Marc" }, { ...env, fullName: "Marc-Etienne Barrut" }).displayName).toBe("Marc");
+  });
   test("unset formats follow the bar clock", () => {
     const bar = (clockFormat, settings = {}) => Model.resolveSettings(settings, { ...env, clockFormat });
     expect(bar("ddd d MMM h:mm AP")).toMatchObject({ timeFormat: "h:mm AP", dateFormat: "ddd d MMM" });

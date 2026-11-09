@@ -272,6 +272,7 @@ export interface Environment {
   readonly user?: string | null;
   readonly home?: string | null;
   readonly clockFormat?: string | null;
+  readonly fullName?: string | null;
 }
 
 export const DEFAULTS = {
@@ -327,7 +328,7 @@ export function resolveSettings(settings: Settings | null | undefined, env: Envi
   const chosen = settings ?? {};
   const bar = splitClockFormat(env.clockFormat);
   return {
-    displayName: chosen.displayName ?? displayName(env.user),
+    displayName: chosen.displayName ?? (env.fullName || displayName(env.user)),
     timeFormat: chosen.timeFormat ?? (bar.time || DEFAULTS.timeFormat),
     dateFormat: chosen.dateFormat ?? (bar.date || DEFAULTS.dateFormat),
     brandingPath: expandHome(chosen.brandingPath ?? DEFAULTS.brandingPath, env.home),
