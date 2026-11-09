@@ -7,9 +7,9 @@ describe("splitClockFormat", () => {
   test.each([
     ["ddd d MMM HH:mm", "HH:mm", "ddd d MMM"],
     ["ddd d MMM h:mm AP", "h:mm AP", "ddd d MMM"],
-    ["dddd HH:mm", "HH:mm", "dddd"],
-    ["dddd h:mm:ss AP", "h:mm AP", "dddd"],
-    ["dddd HH:mm:ss", "HH:mm", "dddd"],
+    ["dddd HH:mm", "HH:mm", ""],
+    ["dddd h:mm:ss AP", "h:mm AP", ""],
+    ["dddd HH:mm:ss", "HH:mm", ""],
     ["HH:mm", "HH:mm", ""],
     ["h:mm AP", "h:mm AP", ""],
     ["d MMMM 'W'ww yyyy", "", "d MMMM 'W'ww yyyy"],
@@ -18,6 +18,12 @@ describe("splitClockFormat", () => {
     ["HH:mm:ss.zzz", "HH:mm", ""],
     ["'at' HH 'h' mm", "HH 'h' mm", ""],
     ["ss", "", ""],
+    ["t", "", ""],
+    ["AP", "", ""],
+    ["mm:ss", "mm", ""],
+    ["dddd MMMM HH:mm", "HH:mm", ""],
+    ["d HH:mm", "HH:mm", ""],
+    ["MMM d, yyyy h:mm AP", "h:mm AP", "MMM d, yyyy"],
     ["", "", ""],
   ])("%j is time %j and date %j", (format, time, date) => {
     expect(Model.splitClockFormat(format)).toEqual({ time, date });
@@ -25,6 +31,7 @@ describe("splitClockFormat", () => {
 
   test("a missing format is empty", () => expect(Model.splitClockFormat(undefined)).toEqual({ time: "", date: "" }));
   test("an unclosed quote is kept as text", () => expect(Model.splitClockFormat("d MMM 'oops")).toEqual({ time: "", date: "d MMM 'oops" }));
+  test("a weekday alone is not a date", () => expect(Model.splitClockFormat("dddd").date).toBe(""));
 });
 
 describe("barClockFormat", () => {

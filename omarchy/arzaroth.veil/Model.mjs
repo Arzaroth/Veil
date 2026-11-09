@@ -80,23 +80,26 @@ function clockParts(format) {
     }
     return parts;
 }
-function joinParts(parts, needs) {
-    if (!parts.some((part) => part.kind === needs))
+function joinParts(parts, ...needs) {
+    if (!needs.every((need) => parts.some((part) => part.kind !== "text" && need.test(part.text))))
         return "";
     return parts.map((part) => part.text).join("").replace(CLOCK_EDGE, "");
 }
+const HOUR_OR_MINUTE = /^[hHm]+$/;
+const DAY_OF_MONTH = /^dd?$/;
+const MONTH = /^M+$/;
 export function splitClockFormat(format) {
     var _a;
     const parts = clockParts(String(format !== null && format !== void 0 ? format : ""));
     const first = parts.findIndex((part) => part.kind === "time");
     if (first < 0)
-        return { time: "", date: joinParts(parts, "date") };
+        return { time: "", date: joinParts(parts, DAY_OF_MONTH, MONTH) };
     let last = parts.length - 1;
     while (((_a = parts[last]) === null || _a === void 0 ? void 0 : _a.kind) !== "time")
         last--;
     return {
-        time: joinParts(parts.slice(first, last + 1), "time"),
-        date: joinParts([...parts.slice(0, first), ...parts.slice(last + 1)], "date"),
+        time: joinParts(parts.slice(first, last + 1), HOUR_OR_MINUTE),
+        date: joinParts([...parts.slice(0, first), ...parts.slice(last + 1)], DAY_OF_MONTH, MONTH),
     };
 }
 export const BAR_CLOCK_ID = "omarchy.clock";

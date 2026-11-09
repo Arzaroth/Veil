@@ -100,20 +100,24 @@ function clockParts(format: string): ClockPart[] {
   return parts;
 }
 
-function joinParts(parts: ReadonlyArray<ClockPart>, needs: ClockPartKind): string {
-  if (!parts.some((part) => part.kind === needs)) return "";
+function joinParts(parts: ReadonlyArray<ClockPart>, ...needs: RegExp[]): string {
+  if (!needs.every((need) => parts.some((part) => part.kind !== "text" && need.test(part.text)))) return "";
   return parts.map((part) => part.text).join("").replace(CLOCK_EDGE, "");
 }
+
+const HOUR_OR_MINUTE = /^[hHm]+$/;
+const DAY_OF_MONTH = /^dd?$/;
+const MONTH = /^M+$/;
 
 export function splitClockFormat(format: string | null | undefined): ClockFormats {
   const parts = clockParts(String(format ?? ""));
   const first = parts.findIndex((part) => part.kind === "time");
-  if (first < 0) return { time: "", date: joinParts(parts, "date") };
+  if (first < 0) return { time: "", date: joinParts(parts, DAY_OF_MONTH, MONTH) };
   let last = parts.length - 1;
   while (parts[last]?.kind !== "time") last--;
   return {
-    time: joinParts(parts.slice(first, last + 1), "time"),
-    date: joinParts([...parts.slice(0, first), ...parts.slice(last + 1)], "date"),
+    time: joinParts(parts.slice(first, last + 1), HOUR_OR_MINUTE),
+    date: joinParts([...parts.slice(0, first), ...parts.slice(last + 1)], DAY_OF_MONTH, MONTH),
   };
 }
 
