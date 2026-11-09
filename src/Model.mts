@@ -247,7 +247,6 @@ export function parseToml(text: string | null | undefined): TomlRead {
   return { values, problems };
 }
 
-export const SETTINGS_RETRY_MS = 5000;
 export const BLANK_AFTER_MIN_S = 5;
 export const BLANK_AFTER_MAX_S = 3600;
 

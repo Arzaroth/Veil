@@ -21,6 +21,8 @@ Item {
   readonly property string configPath: Model.configPath(Quickshell.env("XDG_CONFIG_HOME"), home)
   property var settingsRead: ({ settings: {}, problems: [] })
   readonly property string shellConfigPath: Model.shellConfigPath(Quickshell.env("XDG_CONFIG_HOME"), home)
+  property bool settingsMissing: false
+  property bool shellConfigMissing: false
   property string barClockFormat: ""
   property string fullName: ""
   readonly property var settings: Model.resolveSettings(settingsRead.settings, { user: userName, home: home, clockFormat: barClockFormat, fullName: fullName })
@@ -204,44 +206,54 @@ Item {
     settingsRead = read
   }
 
+  // FileView only watches a file that existed when it was read, so a missing
+  // one is read again when the lock or the preview needs it.
+  function rereadMissingConfig() {
+    if (settingsMissing) settingsFile.reload()
+    if (shellConfigMissing) shellConfigFile.reload()
+  }
+
+  onLockRequestedChanged: if (lockRequested) rereadMissingConfig()
+  onPreviewVisibleChanged: if (previewVisible) rereadMissingConfig()
+
   FileView {
     id: settingsFile
     path: root.configPath
     watchChanges: true
     onFileChanged: reload()
     onLoaded: {
-      settingsRetryTimer.stop()
+      root.settingsMissing = false
       root.applySettings(text())
     }
     onLoadFailed: {
-      root.settingsRead = ({ settings: {}, problems: [] })
-      settingsRetryTimer.start()
+      if (!root.settingsMissing) root.settingsRead = ({ settings: {}, problems: [] })
+      root.settingsMissing = true
     }
   }
 
   FileView {
+    id: shellConfigFile
     path: root.shellConfigPath
     watchChanges: true
     onFileChanged: reload()
-    onLoaded: root.barClockFormat = Model.barClockFormat(text())
-    onLoadFailed: root.barClockFormat = ""
+    onLoaded: {
+      root.shellConfigMissing = false
+      root.barClockFormat = Model.barClockFormat(text())
+    }
+    onLoadFailed: {
+      root.shellConfigMissing = true
+      root.barClockFormat = ""
+    }
   }
 
   Process {
+    id: fullNameProc
     running: root.userName !== ""
     command: ["getent", "passwd", root.userName]
     stdout: StdioCollector {
       waitForEnd: true
       onStreamFinished: root.fullName = Model.gecosName(text, root.userName)
     }
-  }
-
-  // FileView only watches a file that existed when it was read.
-  Timer {
-    id: settingsRetryTimer
-    interval: Model.SETTINGS_RETRY_MS
-    repeat: true
-    onTriggered: settingsFile.reload()
   }
 
   function logEvent(event) {

@@ -237,7 +237,6 @@ export function parseToml(text) {
     });
     return { values, problems };
 }
-export const SETTINGS_RETRY_MS = 5000;
 export const BLANK_AFTER_MIN_S = 5;
 export const BLANK_AFTER_MAX_S = 3600;
 export const DEFAULTS = {
