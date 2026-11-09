@@ -10,9 +10,9 @@ later is picked up within that.
 
 | Key | Type | Default |
 |---|---|---|
-| `display_name` | non-empty string | the login, capitalized |
-| `time_format` | non-empty string, Qt format | `HH:mm` |
-| `date_format` | non-empty string, Qt format | `dddd d MMMM` |
+| `display_name` | non-empty string | the GECOS full name, else the login capitalized |
+| `time_format` | non-empty string, Qt format | the bar clock's time, else `HH:mm` |
+| `date_format` | non-empty string, Qt format | the bar clock's date, else `dddd d MMMM` |
 | `branding` | boolean | `true` |
 | `branding_path` | non-empty string, `~` expanded | `~/.config/omarchy/branding/about.txt` |
 | `blank_after` | whole seconds, 5 to 3600 | `30` |
@@ -28,14 +28,21 @@ A wrong type, a value out of range, an unknown key (a typo such as
 (`veil: ...` in `journalctl --user`) and the default is used. The rule is in
 `CLAUDE.md` ("Settings are read, never trusted").
 
-`shell.json` is not read. Before 0.2.0 the settings lived on Veil's
+The defaults that come from the system are passed to `resolveSettings` in its
+`Environment`: `clockFormat` (`omarchy.clock`'s `format`, read from
+`shell.json` only for this, never written) and `fullName` (from
+`getent passwd`). See [lock-screen.md](lock-screen.md).
+
+Veil's settings are not read from `shell.json`. Before 0.2.0 the settings lived on Veil's
 `plugins[]` entry there; see [../decisions.md](../decisions.md).
 
 ## Sources
 
 - `src/Model.mts`: `parseToml`, `readSettings`, `resolveSettings`,
-  `expandHome`, `configPath`, `DEFAULTS`, `SETTINGS_RETRY_MS`
+  `expandHome`, `configPath`, `shellConfigPath`, `barClockFormat`,
+  `splitClockFormat`, `gecosName`, `DEFAULTS`, `SETTINGS_RETRY_MS`
 - `omarchy/arzaroth.veil/Service.qml`: `configPath`, `settingsRead`,
   `settings`, `applySettings`, `settingsFile`, `settingsRetryTimer`
 - `tests/js/settings.test.mjs`, `tests/js/toml.test.mjs`,
+  `tests/js/clock.test.mjs`,
   `tests/qml/lockview.qml`

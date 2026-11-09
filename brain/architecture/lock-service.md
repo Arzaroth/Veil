@@ -45,7 +45,9 @@ A `FileView` (`settingsFile`) watches `configPath`
 (`~/.config/veil/config.toml`), and `settingsRetryTimer` reloads it every 5 s
 while it is missing; each load goes through
 `Model.readSettings` (problems logged as `veil: ...`) into `settingsRead`, and
-`settings` is `Model.resolveSettings` of it with the user and home. Both the
+`settings` is `Model.resolveSettings` of it with the user, home,
+`barClockFormat` (a second watched `FileView` on `shell.json`, read only) and
+`fullName` (a `getent passwd` `Process` at start). Both the
 lock surfaces' views and the preview get `settings`. See
 [../features/settings.md](../features/settings.md).
 

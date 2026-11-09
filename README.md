@@ -67,12 +67,17 @@ blank_after = 30
 
 | Key | Default | |
 | --- | --- | --- |
-| `display_name` | your login, capitalized | the name above the field |
-| `time_format` | `HH:mm` | Qt date format |
-| `date_format` | `dddd d MMMM` | Qt date format, in your locale |
+| `display_name` | your full name from `/etc/passwd`, else your login capitalized | the name above the field |
+| `time_format` | the bar clock's time, else `HH:mm` | Qt date format |
+| `date_format` | the bar clock's date, else `dddd d MMMM` | Qt date format, in your locale; `ww` is the ISO week |
 | `branding` | `true` | `false` hides the art and the Omarchy wordmark |
 | `branding_path` | `~/.config/omarchy/branding/about.txt` | text art at the bottom; point it at your own file to replace Omarchy's. Missing or empty shows the Omarchy wordmark |
 | `blank_after` | `30` | seconds without input before the screens blank, 5 to 3600 |
+
+Without `time_format` and `date_format`, the lock follows the bar clock's
+format (the one right-click cycles through): `ddd d MMM h:mm AP` gives a
+`h:mm AP` clock over `ddd d MMM`. Seconds are left out, and a part the bar does
+not show falls back to Veil's default.
 
 Every key is optional. A value of the wrong type, a key Veil does not know or
 a line it cannot read is ignored with a warning in `journalctl --user`
