@@ -142,7 +142,7 @@ export function parseToml(text: string | null | undefined): TomlRead {
   return { values, problems };
 }
 
-export const PLUGIN_ID = "arzaroth.veil";
+export const SETTINGS_RETRY_MS = 5000;
 export const BLANK_AFTER_MIN_S = 5;
 export const BLANK_AFTER_MAX_S = 3600;
 
@@ -181,47 +181,37 @@ export const DEFAULTS = {
   blankAfter: 30,
 } as const;
 
-const TEXT_KEYS = ["displayName", "timeFormat", "dateFormat", "brandingPath"] as const;
-const KNOWN_KEYS = new Set<string>(["id", ...TEXT_KEYS, "branding", "blankAfter"]);
+const TEXT_KEYS = {
+  display_name: "displayName",
+  time_format: "timeFormat",
+  date_format: "dateFormat",
+  branding_path: "brandingPath",
+} as const;
+const KNOWN_KEYS = new Set<string>([...Object.keys(TEXT_KEYS), "branding", "blank_after"]);
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-export function readSettings(configText: string | null | undefined, pluginId: string = PLUGIN_ID): SettingsRead {
-  const problems: string[] = [];
-  let config: unknown;
-  try {
-    config = JSON.parse(String(configText ?? ""));
-  } catch {
-    return { settings: {}, problems: ["shell.json is not valid JSON; using the defaults"] };
-  }
-  const plugins = isRecord(config) ? config["plugins"] : undefined;
-  const entry = Array.isArray(plugins) ? plugins.find((item) => isRecord(item) && item["id"] === pluginId) : undefined;
-  if (!isRecord(entry)) return { settings: {}, problems };
-
+export function readSettings(configText: string | null | undefined): SettingsRead {
+  const { values, problems } = parseToml(configText);
   const settings: Settings = {};
-  for (const key of Object.keys(entry)) {
+  for (const key of Object.keys(values)) {
     if (!KNOWN_KEYS.has(key)) problems.push(`unknown setting "${key}" is ignored`);
   }
-  for (const key of TEXT_KEYS) {
-    const value = entry[key];
+  for (const [key, field] of Object.entries(TEXT_KEYS)) {
+    const value = values[key];
     if (value === undefined) continue;
-    if (typeof value === "string" && value.trim().length > 0) settings[key] = value;
+    if (typeof value === "string" && value.trim().length > 0) settings[field] = value;
     else problems.push(`${key} must be a non-empty string; using the default`);
   }
-  const branding = entry["branding"];
+  const branding = values["branding"];
   if (branding !== undefined) {
     if (typeof branding === "boolean") settings.branding = branding;
     else problems.push("branding must be true or false; using the default");
   }
-  const blankAfter = entry["blankAfter"];
+  const blankAfter = values["blank_after"];
   if (blankAfter !== undefined) {
-    if (typeof blankAfter === "number" && Number.isInteger(blankAfter)
-        && blankAfter >= BLANK_AFTER_MIN_S && blankAfter <= BLANK_AFTER_MAX_S) {
+    if (typeof blankAfter === "number" && blankAfter >= BLANK_AFTER_MIN_S && blankAfter <= BLANK_AFTER_MAX_S) {
       settings.blankAfter = blankAfter;
     } else {
-      problems.push(`blankAfter must be a whole number of seconds from ${BLANK_AFTER_MIN_S} to ${BLANK_AFTER_MAX_S}; using the default`);
+      problems.push(`blank_after must be a whole number of seconds from ${BLANK_AFTER_MIN_S} to ${BLANK_AFTER_MAX_S}; using the default`);
     }
   }
   return { settings, problems };
@@ -246,5 +236,5 @@ export function resolveSettings(settings: Settings | null | undefined, env: Envi
 }
 
 export function configPath(xdgConfigHome: string | null | undefined, home: string | null | undefined): string {
-  return `${xdgConfigHome || `${home ?? ""}/.config`}/omarchy/shell.json`;
+  return `${xdgConfigHome || `${home ?? ""}/.config`}/veil/config.toml`;
 }

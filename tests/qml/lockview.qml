@@ -68,13 +68,13 @@ Item {
             check.equal("the default time format", view.timeFormat, "HH:mm")
             check.equal("the default date format", view.dateFormat, "dddd d MMMM")
             view.settings = Model.resolveSettings(
-                Model.readSettings(JSON.stringify({ plugins: [{ id: "arzaroth.veil", displayName: "Someone", timeFormat: "h:mm AP", dateFormat: "d MMM" }] })).settings,
+                Model.readSettings('display_name = "Someone"\ntime_format = "h:mm AP"\ndate_format = "d MMM"').settings,
                 { user: "arzaroth", home: "/home/arzaroth" })
         } },
         { run: function () {
-            check.equal("a shell.json name reaches the view", view.displayName, "Someone")
-            check.equal("a shell.json time format reaches the view", view.timeFormat, "h:mm AP")
-            check.equal("a shell.json date format reaches the view", view.dateFormat, "d MMM")
+            check.equal("a config.toml name reaches the view", view.displayName, "Someone")
+            check.equal("a config.toml time format reaches the view", view.timeFormat, "h:mm AP")
+            check.equal("a config.toml date format reaches the view", view.dateFormat, "d MMM")
             check.equal("and the default branding path is home-expanded", view.settings.brandingPath, "/home/arzaroth/.config/omarchy/branding/about.txt")
         } }
     ])

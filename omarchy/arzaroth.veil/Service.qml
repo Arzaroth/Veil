@@ -202,11 +202,26 @@ Item {
   }
 
   FileView {
+    id: settingsFile
     path: root.configPath
     watchChanges: true
     onFileChanged: reload()
-    onLoaded: root.applySettings(text())
-    onLoadFailed: root.settingsRead = ({ settings: {}, problems: [] })
+    onLoaded: {
+      settingsRetryTimer.stop()
+      root.applySettings(text())
+    }
+    onLoadFailed: {
+      root.settingsRead = ({ settings: {}, problems: [] })
+      settingsRetryTimer.start()
+    }
+  }
+
+  // FileView only watches a file that existed when it was read.
+  Timer {
+    id: settingsRetryTimer
+    interval: Model.SETTINGS_RETRY_MS
+    repeat: true
+    onTriggered: settingsFile.reload()
   }
 
   function logEvent(event) {

@@ -1,63 +1,61 @@
 import { describe, expect, test } from "vitest";
 import * as Model from "../../src/Model.mts";
 
-const config = (entry, extra = {}) => JSON.stringify({ bar: {}, plugins: [{ id: "other.plugin", displayName: "x" }, entry], ...extra });
+const toml = (...lines) => Model.readSettings(lines.join("\n"));
 
 describe("readSettings", () => {
-  test("no entry, no settings and no complaint", () => {
-    expect(Model.readSettings(JSON.stringify({ plugins: [] }))).toEqual({ settings: {}, problems: [] });
-    expect(Model.readSettings(JSON.stringify({ bar: {} }))).toEqual({ settings: {}, problems: [] });
-    expect(Model.readSettings(JSON.stringify([1, 2]))).toEqual({ settings: {}, problems: [] });
+  test("no file or an empty one, no settings and no complaint", () => {
+    expect(Model.readSettings("")).toEqual({ settings: {}, problems: [] });
+    expect(Model.readSettings(undefined)).toEqual({ settings: {}, problems: [] });
+    expect(toml("# nothing set")).toEqual({ settings: {}, problems: [] });
   });
 
-  test("reads Veil's own entry and nobody else's", () => {
-    const read = Model.readSettings(config({ id: "arzaroth.veil", displayName: "Marc", timeFormat: "h:mm AP", dateFormat: "d MMM", brandingPath: "~/art.txt", blankAfter: 60 }));
-    expect(read).toEqual({ settings: { displayName: "Marc", timeFormat: "h:mm AP", dateFormat: "d MMM", brandingPath: "~/art.txt", blankAfter: 60 }, problems: [] });
+  test("reads every key", () => {
+    expect(toml(
+      'display_name = "Marc"',
+      'time_format = "h:mm AP"',
+      'date_format = "d MMM"',
+      "branding = false",
+      "branding_path = '~/art.txt'",
+      "blank_after = 60",
+    )).toEqual({ settings: { displayName: "Marc", timeFormat: "h:mm AP", dateFormat: "d MMM", branding: false, brandingPath: "~/art.txt", blankAfter: 60 }, problems: [] });
   });
 
-  test("a plugin id can be given", () => {
-    expect(Model.readSettings(config({ id: "someone.veil", timeFormat: "HH" }), "someone.veil").settings).toEqual({ timeFormat: "HH" });
-  });
-
-  test("broken JSON keeps the defaults and says so", () => {
-    const read = Model.readSettings("{ nope");
-    expect(read.settings).toEqual({});
-    expect(read.problems).toEqual(["shell.json is not valid JSON; using the defaults"]);
-    expect(Model.readSettings(undefined).problems).toHaveLength(1);
+  test("what the file cannot say is reported, and the rest still read", () => {
+    expect(toml("[colors]", 'display_name = "Marc"')).toEqual({ settings: {}, problems: ["line 1: Veil has no [colors] table; its keys are ignored"] });
+    expect(toml("time_format = HH", 'date_format = "d"')).toEqual({ settings: { dateFormat: "d" }, problems: ["line 1: time_format has a value Veil cannot read; ignored"] });
   });
 
   test("wrong types and blank text are dropped one by one", () => {
-    const read = Model.readSettings(config({ id: "arzaroth.veil", displayName: "  ", timeFormat: 12, dateFormat: "d", brandingPath: null }));
+    const read = toml('display_name = "  "', "time_format = 12", 'date_format = "d"', "branding_path = true");
     expect(read.settings).toEqual({ dateFormat: "d" });
     expect(read.problems).toEqual([
-      "displayName must be a non-empty string; using the default",
-      "timeFormat must be a non-empty string; using the default",
-      "brandingPath must be a non-empty string; using the default",
+      "display_name must be a non-empty string; using the default",
+      "time_format must be a non-empty string; using the default",
+      "branding_path must be a non-empty string; using the default",
     ]);
   });
 
-  test("blankAfter is whole seconds within bounds", () => {
-    const blank = (value) => Model.readSettings(config({ id: "arzaroth.veil", blankAfter: value }));
+  test("blank_after is whole seconds within bounds", () => {
+    const blank = (value) => toml(`blank_after = ${value}`);
     expect(blank(Model.BLANK_AFTER_MIN_S).settings.blankAfter).toBe(Model.BLANK_AFTER_MIN_S);
     expect(blank(Model.BLANK_AFTER_MAX_S).settings.blankAfter).toBe(Model.BLANK_AFTER_MAX_S);
-    for (const bad of [Model.BLANK_AFTER_MIN_S - 1, Model.BLANK_AFTER_MAX_S + 1, 12.5, "30", null]) {
+    for (const bad of [Model.BLANK_AFTER_MIN_S - 1, Model.BLANK_AFTER_MAX_S + 1, '"30"', "true"]) {
       const read = blank(bad);
       expect(read.settings.blankAfter).toBeUndefined();
-      expect(read.problems[0]).toMatch(/^blankAfter must be a whole number/);
+      expect(read.problems).toEqual([`blank_after must be a whole number of seconds from ${Model.BLANK_AFTER_MIN_S} to ${Model.BLANK_AFTER_MAX_S}; using the default`]);
     }
   });
 
   test("branding is a boolean", () => {
-    const branding = (value) => Model.readSettings(config({ id: "arzaroth.veil", branding: value }));
-    expect(branding(false)).toEqual({ settings: { branding: false }, problems: [] });
-    expect(branding(true)).toEqual({ settings: { branding: true }, problems: [] });
-    for (const bad of ["false", 0, null]) {
-      expect(branding(bad)).toEqual({ settings: {}, problems: ["branding must be true or false; using the default"] });
+    expect(toml("branding = true")).toEqual({ settings: { branding: true }, problems: [] });
+    for (const bad of ['"false"', "0"]) {
+      expect(toml(`branding = ${bad}`)).toEqual({ settings: {}, problems: ["branding must be true or false; using the default"] });
     }
   });
 
   test("an unknown key is reported, so a typo is not silent", () => {
-    expect(Model.readSettings(config({ id: "arzaroth.veil", timeformat: "HH" })).problems).toEqual(['unknown setting "timeformat" is ignored']);
+    expect(toml('timeformat = "HH"', 'displayName = "x"').problems).toEqual(['unknown setting "timeformat" is ignored', 'unknown setting "displayName" is ignored']);
   });
 });
 
@@ -95,6 +93,6 @@ describe("resolveSettings", () => {
 });
 
 describe("configPath", () => {
-  test("follows XDG_CONFIG_HOME", () => expect(Model.configPath("/x/conf", "/home/u")).toBe("/x/conf/omarchy/shell.json"));
-  test("falls back to ~/.config", () => expect(Model.configPath("", "/home/u")).toBe("/home/u/.config/omarchy/shell.json"));
+  test("follows XDG_CONFIG_HOME", () => expect(Model.configPath("/x/conf", "/home/u")).toBe("/x/conf/veil/config.toml"));
+  test("falls back to ~/.config", () => expect(Model.configPath("", "/home/u")).toBe("/home/u/.config/veil/config.toml"));
 });
