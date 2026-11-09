@@ -161,8 +161,6 @@ function tomlBasicString(body) {
     let out = "";
     for (let i = 0; i < body.length; i++) {
         const c = body.charAt(i);
-        if (c === "\"")
-            return null;
         if (c !== "\\") {
             out += c;
             continue;
@@ -177,7 +175,7 @@ function tomlBasicString(body) {
             if (!/^[0-9A-Fa-f]+$/.test(hex) || hex.length !== width)
                 return null;
             const code = parseInt(hex, 16);
-            if (code > 0x10ffff)
+            if (code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff))
                 return null;
             out += String.fromCodePoint(code);
             i += width;
@@ -209,17 +207,22 @@ function tomlValue(raw) {
 export function parseToml(text) {
     const values = {};
     const problems = [];
-    let table = "";
-    String(text !== null && text !== void 0 ? text : "").replace(/^﻿/, "").split(/\r?\n/).forEach((line, index) => {
-        var _a;
+    let inTable = false;
+    let multiline = "";
+    String(text !== null && text !== void 0 ? text : "").replace(/^﻿/, "").split(/\r\n|\r|\n/).forEach((line, index) => {
+        var _a, _b;
         const at = `line ${index + 1}`;
+        if (multiline) {
+            if (line.indexOf(multiline) >= 0)
+                multiline = "";
+            return;
+        }
         const trimmed = line.trim();
         if (trimmed === "" || trimmed.startsWith("#"))
             return;
-        const header = /^\[\s*([^\]]*?)\s*\]\s*(?:#.*)?$/.exec(trimmed);
-        if (header) {
-            table = header[1] || "?";
-            problems.push(`${at}: Veil has no [${table}] table; its keys are ignored`);
+        if (trimmed.startsWith("[")) {
+            inTable = true;
+            problems.push(`${at}: Veil has no tables; ${trimmed.slice(0, 40)} and its keys are ignored`);
             return;
         }
         const pair = /^([A-Za-z0-9_-]+)\s*=\s*(.*)$/.exec(trimmed);
@@ -227,13 +230,22 @@ export function parseToml(text) {
             problems.push(`${at}: not a key = value line; ignored`);
             return;
         }
-        if (table)
-            return;
         const key = pair[1];
-        const value = tomlValue((_a = pair[2]) !== null && _a !== void 0 ? _a : "");
+        const raw = (_a = pair[2]) !== null && _a !== void 0 ? _a : "";
+        const quotes = (_b = /^("""|''')/.exec(raw)) === null || _b === void 0 ? void 0 : _b[1];
+        if (quotes) {
+            if (raw.indexOf(quotes, 3) < 0)
+                multiline = quotes;
+            if (!inTable)
+                problems.push(`${at}: ${key} is a multi-line string, which Veil does not read; ignored`);
+            return;
+        }
+        if (inTable)
+            return;
+        const value = tomlValue(raw);
         if (value === undefined)
             problems.push(`${at}: ${key} has a value Veil cannot read; ignored`);
-        else if (key in values)
+        else if (Object.prototype.hasOwnProperty.call(values, key))
             problems.push(`${at}: ${key} is set twice; the first one is kept`);
         else
             values[key] = value;

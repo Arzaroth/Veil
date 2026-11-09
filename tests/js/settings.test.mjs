@@ -22,7 +22,7 @@ describe("readSettings", () => {
   });
 
   test("what the file cannot say is reported, and the rest still read", () => {
-    expect(toml("[colors]", 'display_name = "Marc"')).toEqual({ settings: {}, problems: ["line 1: Veil has no [colors] table; its keys are ignored"] });
+    expect(toml("[colors]", 'display_name = "Marc"')).toEqual({ settings: {}, problems: ["line 1: Veil has no tables; [colors] and its keys are ignored"] });
     expect(toml("time_format = HH", 'date_format = "d"')).toEqual({ settings: { dateFormat: "d" }, problems: ["line 1: time_format has a value Veil cannot read; ignored"] });
   });
 

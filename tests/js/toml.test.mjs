@@ -31,12 +31,19 @@ describe("parseToml", () => {
     expect(read('h = "a # not a comment"').values.h).toBe("a # not a comment");
   });
 
-  test("CRLF line endings", () => {
+  test("CRLF and bare CR line endings", () => {
     expect(Model.parseToml("a = 1\r\nb = 'x'\r\n").values).toEqual({ a: 1, b: "x" });
+    expect(Model.parseToml("a = 1\rb = 2").values).toEqual({ a: 1, b: 2 });
+  });
+
+  test("names every JS object inherits are ordinary keys", () => {
+    const parsed = read("constructor = 1", "toString = 'x'", "__proto__ = 2");
+    expect(parsed.problems).toEqual([]);
+    expect(Object.keys(parsed.values)).toEqual(["constructor", "toString"]);
   });
 
   test("values it cannot read are reported and skipped", () => {
-    for (const raw of ['"open', '"bad \\q escape"', '"\\u12"', '"\\U00110000"', '"a" "b"', "[1, 2]", "1.5", "01", "yes", ""]) {
+    for (const raw of ['"open', '"bad \\q escape"', '"\\u12"', '"\\U00110000"', '"\\uD800"', '"\\uDFFF"', '"a" "b"', "[1, 2]", "1.5", "01", "yes", ""]) {
       expect(read("ok = 1", `k = ${raw}`)).toEqual({ values: { ok: 1 }, problems: ["line 2: k has a value Veil cannot read; ignored"] });
     }
   });
@@ -44,7 +51,33 @@ describe("parseToml", () => {
   test("tables and their keys are ignored, once each", () => {
     expect(read("a = 1", "[colors]", "ink = 'red'", "[]", "b = 2")).toEqual({
       values: { a: 1 },
-      problems: ["line 2: Veil has no [colors] table; its keys are ignored", "line 4: Veil has no [?] table; its keys are ignored"],
+      problems: ["line 2: Veil has no tables; [colors] and its keys are ignored", "line 4: Veil has no tables; [] and its keys are ignored"],
+    });
+  });
+
+  test("arrays of tables and odd headers are tables too", () => {
+    expect(read("[[extra]]", "blank_after = 10", '["a]b"]', "c = 1")).toEqual({
+      values: {},
+      problems: ["line 1: Veil has no tables; [[extra]] and its keys are ignored", 'line 3: Veil has no tables; ["a]b"] and its keys are ignored'],
+    });
+  });
+
+  test("a long unclosed header is read in linear time", () => {
+    const started = Date.now();
+    read("[a" + " ".repeat(300000) + "b");
+    expect(Date.now() - started).toBeLessThan(1000);
+  });
+
+  test("multi-line strings are skipped whole, inner lines included", () => {
+    const tick = "'".repeat(3);
+    const dq = '"'.repeat(3);
+    expect(read(`a = ${tick}`, 'time_format = "h:mm"', tick, "b = 1", `c = ${dq}one line${dq}`, "[t]", `d = ${dq}`, "e = 2", dq)).toEqual({
+      values: { b: 1 },
+      problems: [
+        "line 1: a is a multi-line string, which Veil does not read; ignored",
+        "line 5: c is a multi-line string, which Veil does not read; ignored",
+        "line 6: Veil has no tables; [t] and its keys are ignored",
+      ],
     });
   });
 
