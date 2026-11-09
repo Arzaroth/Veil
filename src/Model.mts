@@ -64,6 +64,105 @@ export function parseSnapshots(text: string | null | undefined): SnapshotFiles {
   return files;
 }
 
+export interface ClockFormats {
+  readonly time: string;
+  readonly date: string;
+}
+
+type ClockPartKind = "time" | "seconds" | "date" | "text";
+
+interface ClockPart {
+  readonly kind: ClockPartKind;
+  readonly text: string;
+}
+
+const CLOCK_TOKEN = /'(?:[^']|'')*'?|AP|ap|A|a|([hHmsztdMyw])\1*|[^'APahHmsztdMyw]+/g;
+const CLOCK_EDGE = /^[\s,;|/·-]+|[\s,;|/·-]+$/g;
+
+function clockPartKind(token: string): ClockPartKind {
+  if (/^(AP|ap|A|a|[hHmt]+)$/.test(token)) return "time";
+  if (/^[sz]+$/.test(token)) return "seconds";
+  if (/^[dMyw]+$/.test(token)) return "date";
+  return "text";
+}
+
+function clockParts(format: string): ClockPart[] {
+  const parts: ClockPart[] = [];
+  for (const token of format.match(CLOCK_TOKEN) ?? []) {
+    const kind = clockPartKind(token);
+    if (kind === "seconds") {
+      const before = parts[parts.length - 1];
+      if (before?.kind === "text" && /^[:.,]$/.test(before.text)) parts.pop();
+      continue;
+    }
+    parts.push({ kind, text: token });
+  }
+  return parts;
+}
+
+function joinParts(parts: ReadonlyArray<ClockPart>, needs: ClockPartKind): string {
+  if (!parts.some((part) => part.kind === needs)) return "";
+  return parts.map((part) => part.text).join("").replace(CLOCK_EDGE, "");
+}
+
+export function splitClockFormat(format: string | null | undefined): ClockFormats {
+  const parts = clockParts(String(format ?? ""));
+  const first = parts.findIndex((part) => part.kind === "time");
+  if (first < 0) return { time: "", date: joinParts(parts, "date") };
+  let last = parts.length - 1;
+  while (parts[last]?.kind !== "time") last--;
+  return {
+    time: joinParts(parts.slice(first, last + 1), "time"),
+    date: joinParts([...parts.slice(0, first), ...parts.slice(last + 1)], "date"),
+  };
+}
+
+export const BAR_CLOCK_ID = "omarchy.clock";
+export const BAR_CLOCK_DEFAULT_FORMAT = "dddd HH:mm";
+
+export function barClockFormat(shellJson: string | null | undefined): string {
+  let config: unknown;
+  try {
+    config = JSON.parse(String(shellJson ?? ""));
+  } catch (error) {
+    return "";
+  }
+  const bar = isRecord(config) ? config["bar"] : undefined;
+  if (!isRecord(bar)) return "";
+  for (const section of Object.values(bar)) {
+    if (!Array.isArray(section)) continue;
+    const clock = section.find((item) => isRecord(item) && item["id"] === BAR_CLOCK_ID);
+    if (!isRecord(clock)) continue;
+    const format = clock["format"];
+    return typeof format === "string" && format.trim().length > 0 ? format : BAR_CLOCK_DEFAULT_FORMAT;
+  }
+  return "";
+}
+
+export function isoWeek(date: Date): number {
+  const day = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  day.setUTCDate(day.getUTCDate() + 4 - (day.getUTCDay() || 7));
+  const yearStart = Date.UTC(day.getUTCFullYear(), 0, 1);
+  return Math.ceil(((day.getTime() - yearStart) / 86400000 + 1) / 7);
+}
+
+export function withIsoWeek(format: string, date: Date): string {
+  if (format.indexOf("ww") < 0) return format;
+  const week = isoWeek(date);
+  return format.replace(/ww/g, `${week < 10 ? "0" : ""}${week}`);
+}
+
+export function gecosName(passwdLine: string | null | undefined, user: string | null | undefined): string {
+  const fields = String(passwdLine ?? "").trim().split(":");
+  if (!user || fields[0] !== user) return "";
+  const name = String(fields[4] ?? "").split(",")[0] ?? "";
+  return name.replace(/&/g, displayName(user)).trim();
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 export type TomlValue = string | number | boolean;
 
 export interface TomlRead {
