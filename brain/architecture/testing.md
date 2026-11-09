@@ -3,7 +3,7 @@
 | Suite | What it covers | Command |
 |---|---|---|
 | `tests/js/*.test.mjs` | `src/Model.mts` (imported directly) and `FingerprintModel.js` (with `createRequire`); the manifest | `pnpm test` |
-| `tests/qml/lockview.qml` | The real `LockView` in a QML runtime: name, info line, branding file, reveal before and after `presented`, fade out on `unlocking`, charging icon, missing art | `tests/qml/run.sh` |
+| `tests/qml/lockview.qml` | The real `LockView` in a QML runtime: name, info line, branding file, reveal before and after `presented`, fade out on `unlocking`, charging icon, missing art, `branding = false` from the settings hiding art and wordmark, the full name and the bar clock formats reaching the view | `tests/qml/run.sh` |
 | `tests/snapshot/run.sh` | `bin/snapshot` with a fake `grim`: output lines, a failed output left out, 0700/0600 modes, replace, clean, no runtime dir | `tests/snapshot/run.sh` |
 | `tests/install/run.sh` | `scripts/install.sh` with fake `omarchy-*` tools: call order, rollback, uninstall, refusals; and a release served over `file://`: piped install, `--version`, a tampered archive, a missing release | `tests/install/run.sh` |
 | `tests/package/run.sh` | `scripts/package.sh`: archive name, checksum, contents, no sources, executable helper, reproducible | `tests/package/run.sh` |

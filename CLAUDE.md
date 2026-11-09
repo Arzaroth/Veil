@@ -96,11 +96,12 @@ imports `Model.mjs` the way the shell does.
 
 ## Settings are read, never trusted
 
-`shell.json` is the user's file, edited by hand. `Model.readSettings` takes
-Veil's `plugins[]` entry, keeps each key only if it has the right type and
-range, and returns a problem line for everything else, which the service logs
-as `veil: ...`. A broken file or a bad value never stops the lock: it falls
-back to the default. `tests/js/settings.test.mjs` covers each rule.
+`~/.config/veil/config.toml` is the user's file, edited by hand.
+`Model.parseToml` reads its flat `key = value` lines and `Model.readSettings`
+keeps each key only if it has the right type and range, and returns a problem
+line for everything else, which the service logs as `veil: ...`. A broken
+file or a bad value never stops the lock: it falls back to the default.
+`tests/js/settings.test.mjs` and `tests/js/toml.test.mjs` cover each rule.
 
 ## Lock services load on a shell restart
 

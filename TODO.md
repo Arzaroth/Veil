@@ -9,6 +9,11 @@ Small work, and the decisions to take before each milestone.
 - The date line is still the weakest text over a bright wallpaper; consider a
   stronger shadow on the date alone.
 - `poster.sh` (video wallpaper poster) is upstream's and untested here.
+- The service's settings wiring (`settingsFile`, `shellConfigFile`,
+  `fullNameProc`, `rereadMissingConfig`) runs only in the live shell: the QML
+  harness loads `LockView` alone and has no `Process` stub.
+- The bar localizes the digits of the `ww` week number (`I18n.formatNumber`);
+  the lock prints ASCII digits.
 
 ## Decisions
 

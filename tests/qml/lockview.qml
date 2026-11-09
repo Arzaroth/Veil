@@ -11,6 +11,15 @@ Item {
 
     Check { id: check; name: "lockview" }
 
+    function find(item, name) {
+        if (item.objectName === name) return item
+        for (let i = 0; i < item.children.length; i++) {
+            const found = find(item.children[i], name)
+            if (found) return found
+        }
+        return null
+    }
+
     Veil.LockView {
         id: view
         anchors.fill: parent
@@ -28,6 +37,12 @@ Item {
         } },
         { after: 600, run: function () {
             check.equal("the branding art is read and its trailing blank lines trimmed", view.brandingArt, "  ⣿⣿\n ⣿⣿⣿")
+            check.equal("the art is shown", find(view, "brandingArt").visible, true)
+            check.equal("and the wordmark is not", find(view, "brandingWordmark").visible, false)
+            view.settings = Model.resolveSettings({ branding: false }, { user: "arzaroth", home: "/home/arzaroth" })
+            check.equal("branding off hides the art", find(view, "brandingArt").visible, false)
+            check.equal("and does not bring the wordmark back", find(view, "brandingWordmark").visible, false)
+            view.settings = Model.resolveSettings({}, { user: "arzaroth", home: "/home/arzaroth" })
             check.equal("still hidden while the lock is not on screen", view.reveal, 0)
             view.presented = true
         } },
@@ -46,17 +61,27 @@ Item {
         } },
         { after: 600, run: function () {
             check.equal("a missing branding file falls back to the wordmark", view.brandingArt, "")
+            check.equal("the wordmark is shown", find(view, "brandingWordmark").visible, true)
+            view.settings = Model.resolveSettings({ branding: false }, { user: "arzaroth", home: "/home/arzaroth" })
+            check.equal("branding off hides the wordmark too", find(view, "brandingWordmark").visible, false)
+            view.settings = Model.resolveSettings({}, { user: "arzaroth", home: "/home/arzaroth" })
             check.equal("the default time format", view.timeFormat, "HH:mm")
             check.equal("the default date format", view.dateFormat, "dddd d MMMM")
             view.settings = Model.resolveSettings(
-                Model.readSettings(JSON.stringify({ plugins: [{ id: "arzaroth.veil", displayName: "Someone", timeFormat: "h:mm AP", dateFormat: "d MMM" }] })).settings,
+                Model.readSettings('display_name = "Someone"\ntime_format = "h:mm AP"\ndate_format = "d MMM"').settings,
                 { user: "arzaroth", home: "/home/arzaroth" })
         } },
         { run: function () {
-            check.equal("a shell.json name reaches the view", view.displayName, "Someone")
-            check.equal("a shell.json time format reaches the view", view.timeFormat, "h:mm AP")
-            check.equal("a shell.json date format reaches the view", view.dateFormat, "d MMM")
+            check.equal("a config.toml name reaches the view", view.displayName, "Someone")
+            check.equal("a config.toml time format reaches the view", view.timeFormat, "h:mm AP")
+            check.equal("a config.toml date format reaches the view", view.dateFormat, "d MMM")
             check.equal("and the default branding path is home-expanded", view.settings.brandingPath, "/home/arzaroth/.config/omarchy/branding/about.txt")
+            view.settings = Model.resolveSettings({}, { user: "arzaroth", home: "/home/arzaroth", clockFormat: "ddd d MMM h:mm:ss AP", fullName: "Marc-Etienne Barrut" })
+        } },
+        { run: function () {
+            check.equal("the full name reaches the view", view.displayName, "Marc-Etienne Barrut")
+            check.equal("the bar clock's time, without seconds", view.timeFormat, "h:mm AP")
+            check.equal("the bar clock's date", view.dateFormat, "ddd d MMM")
         } }
     ])
 }

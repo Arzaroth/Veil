@@ -51,7 +51,7 @@ lock, including the one before suspend.
 The compiled file is committed; CI fails if it is stale.
 
 **Why.** QML only runs JavaScript, so the choice is what produces it. Types
-catch bad input once settings come from `shell.json`. Committing the output
+catch bad input once settings come from a file the user edits. Committing the output
 keeps the install a plain copy with no Node on the machine.
 
 **Rejected.** Plain JS (no types). A C++ QML plugin: built against the exact
@@ -61,10 +61,13 @@ Building at install time: Node becomes a runtime requirement of a lock screen.
 
 ## Bullets
 
-- Settings live on Veil's `plugins[]` entry in `shell.json` rather than a file
-  of Veil's own: it is where an Omarchy user already edits the shell, and the
-  shell keeps the keys. The cost is that disabling the plugin drops them.
-- The blank delay is `blankAfter` in seconds, like `shell.json`'s own `idle`
+- Settings live in Veil's own `~/.config/veil/config.toml`, not on its
+  `plugins[]` entry in `shell.json` (where 0.1.0 kept them): the user's other
+  tools (TokenGauge, CodeGauge) each keep a `config.toml` of their own, the
+  settings survive `omarchy plugin disable`, and the shell never rewrites the
+  file. The cost is a small TOML reader in `Model.mts` and a retry while the
+  file is missing.
+- The blank delay is `blank_after` in seconds, like `shell.json`'s own `idle`
   keys, not `idleMs` as the QML property is named.
 - `tsconfig.json` targets ES2018: QML's engine rejected ES2019's `catch {}`.
 

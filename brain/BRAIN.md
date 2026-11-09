@@ -43,7 +43,7 @@ answer. Every leaf doc ends with the source files behind it.
 |---|---|
 | [transitions.md](features/transitions.md) | The fade from your windows on lock, and back on unlock. |
 | [lock-screen.md](features/lock-screen.md) | Clock, date, name, info line, branding art, the shake. |
-| [settings.md](features/settings.md) | The `shell.json` keys, defaults and validation. |
+| [settings.md](features/settings.md) | The `config.toml` keys, defaults and validation. |
 | [timing.md](features/timing.md) | The 150 ms pre-lock wait and the 30 s before blanking. |
 
 ## Find by question

@@ -54,7 +54,219 @@ export function parseSnapshots(text) {
     }
     return files;
 }
-export const PLUGIN_ID = "arzaroth.veil";
+const CLOCK_TOKEN = /'(?:[^']|'')*'?|AP|ap|A|a|([hHmsztdMyw])\1*|[^'APahHmsztdMyw]+/g;
+const CLOCK_EDGE = /^[\s,;|/·-]+|[\s,;|/·-]+$/g;
+function clockPartKind(token) {
+    if (/^(AP|ap|A|a|[hHmt]+)$/.test(token))
+        return "time";
+    if (/^[sz]+$/.test(token))
+        return "seconds";
+    if (/^[dMyw]+$/.test(token))
+        return "date";
+    return "text";
+}
+function clockParts(format) {
+    var _a;
+    const parts = [];
+    for (const token of (_a = format.match(CLOCK_TOKEN)) !== null && _a !== void 0 ? _a : []) {
+        const kind = clockPartKind(token);
+        if (kind === "seconds") {
+            const before = parts[parts.length - 1];
+            if ((before === null || before === void 0 ? void 0 : before.kind) === "text" && /^[:.,]$/.test(before.text))
+                parts.pop();
+            continue;
+        }
+        parts.push({ kind, text: token });
+    }
+    return parts;
+}
+function joinParts(parts, ...needs) {
+    if (!needs.every((need) => parts.some((part) => part.kind !== "text" && need.test(part.text))))
+        return "";
+    return parts.map((part) => part.text).join("").replace(CLOCK_EDGE, "");
+}
+const HOUR_OR_MINUTE = /^[hHm]+$/;
+const DAY_OF_MONTH = /^dd?$/;
+const MONTH = /^M+$/;
+export function splitClockFormat(format) {
+    var _a;
+    const parts = clockParts(String(format !== null && format !== void 0 ? format : ""));
+    const first = parts.findIndex((part) => part.kind === "time");
+    if (first < 0)
+        return { time: "", date: joinParts(parts, DAY_OF_MONTH, MONTH) };
+    let last = parts.length - 1;
+    while (((_a = parts[last]) === null || _a === void 0 ? void 0 : _a.kind) !== "time")
+        last--;
+    return {
+        time: joinParts(parts.slice(first, last + 1), HOUR_OR_MINUTE),
+        date: joinParts([...parts.slice(0, first), ...parts.slice(last + 1)], DAY_OF_MONTH, MONTH),
+    };
+}
+export const BAR_CLOCK_ID = "omarchy.clock";
+export const BAR_CLOCK_DEFAULT_FORMAT = "dddd HH:mm";
+export const BAR_SECTIONS = ["left", "centerBegin", "center", "centerEnd", "right", "tray"];
+export function barClockFormat(shellJson) {
+    let config;
+    try {
+        config = JSON.parse(String(shellJson !== null && shellJson !== void 0 ? shellJson : ""));
+    }
+    catch (error) {
+        return "";
+    }
+    const bar = isRecord(config) ? config["bar"] : undefined;
+    const layout = isRecord(bar) ? bar["layout"] : undefined;
+    if (!isRecord(layout))
+        return "";
+    let found = false;
+    for (const name of BAR_SECTIONS) {
+        const section = layout[name];
+        if (!Array.isArray(section))
+            continue;
+        for (const item of section) {
+            if (!isRecord(item) || item["id"] !== BAR_CLOCK_ID)
+                continue;
+            const format = item["format"];
+            if (typeof format === "string" && format.trim().length > 0)
+                return format;
+            found = true;
+        }
+    }
+    return found ? BAR_CLOCK_DEFAULT_FORMAT : "";
+}
+export function staleShellSettings(shellJson, pluginId) {
+    let config;
+    try {
+        config = JSON.parse(String(shellJson !== null && shellJson !== void 0 ? shellJson : ""));
+    }
+    catch (error) {
+        return "";
+    }
+    const plugins = isRecord(config) ? config["plugins"] : undefined;
+    const entry = Array.isArray(plugins) ? plugins.find((item) => isRecord(item) && item["id"] === pluginId) : undefined;
+    const keys = isRecord(entry) ? Object.keys(entry).filter((key) => key !== "id") : [];
+    if (keys.length === 0)
+        return "";
+    return `settings on ${pluginId} in shell.json are no longer read (${keys.join(", ")}); move them to ~/.config/veil/config.toml`;
+}
+export function isoWeek(date) {
+    const day = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    day.setUTCDate(day.getUTCDate() + 4 - (day.getUTCDay() || 7));
+    const yearStart = Date.UTC(day.getUTCFullYear(), 0, 1);
+    return Math.ceil(((day.getTime() - yearStart) / 86400000 + 1) / 7);
+}
+export function withIsoWeek(format, date) {
+    if (format.indexOf("ww") < 0)
+        return format;
+    const week = isoWeek(date);
+    return format.replace(/ww/g, `${week < 10 ? "0" : ""}${week}`);
+}
+export function gecosName(passwdLine, user) {
+    var _a, _b;
+    const fields = String(passwdLine !== null && passwdLine !== void 0 ? passwdLine : "").trim().split(":");
+    if (!user || fields[0] !== user)
+        return "";
+    const name = (_b = String((_a = fields[4]) !== null && _a !== void 0 ? _a : "").split(",")[0]) !== null && _b !== void 0 ? _b : "";
+    return name.replace(/&/g, displayName(user)).trim();
+}
+function isRecord(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+const TOML_ESCAPES = { b: "\b", t: "\t", n: "\n", f: "\f", r: "\r", "\"": "\"", "\\": "\\" };
+function tomlBasicString(body) {
+    let out = "";
+    for (let i = 0; i < body.length; i++) {
+        const c = body.charAt(i);
+        if (c !== "\\") {
+            out += c;
+            continue;
+        }
+        const e = body.charAt(++i);
+        if (e in TOML_ESCAPES) {
+            out += TOML_ESCAPES[e];
+        }
+        else if (e === "u" || e === "U") {
+            const width = e === "u" ? 4 : 8;
+            const hex = body.slice(i + 1, i + 1 + width);
+            if (!/^[0-9A-Fa-f]+$/.test(hex) || hex.length !== width)
+                return null;
+            const code = parseInt(hex, 16);
+            if (code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff))
+                return null;
+            out += String.fromCodePoint(code);
+            i += width;
+        }
+        else {
+            return null;
+        }
+    }
+    return out;
+}
+function tomlValue(raw) {
+    var _a, _b, _c, _d;
+    const basic = /^"((?:[^"\\]|\\.)*)"\s*(?:#.*)?$/.exec(raw);
+    if (basic)
+        return (_b = tomlBasicString((_a = basic[1]) !== null && _a !== void 0 ? _a : "")) !== null && _b !== void 0 ? _b : undefined;
+    const literal = /^'([^']*)'\s*(?:#.*)?$/.exec(raw);
+    if (literal)
+        return (_c = literal[1]) !== null && _c !== void 0 ? _c : "";
+    const bare = /^([^\s#]+)\s*(?:#.*)?$/.exec(raw);
+    const word = (_d = bare === null || bare === void 0 ? void 0 : bare[1]) !== null && _d !== void 0 ? _d : "";
+    if (word === "true")
+        return true;
+    if (word === "false")
+        return false;
+    if (/^[+-]?(?:0|[1-9](?:_?\d)*)$/.test(word))
+        return Number(word.replace(/_/g, ""));
+    return undefined;
+}
+export function parseToml(text) {
+    const values = {};
+    const problems = [];
+    let inTable = false;
+    let multiline = "";
+    String(text !== null && text !== void 0 ? text : "").replace(/^﻿/, "").split(/\r\n|\r|\n/).forEach((line, index) => {
+        var _a, _b;
+        const at = `line ${index + 1}`;
+        if (multiline) {
+            if (line.indexOf(multiline) >= 0)
+                multiline = "";
+            return;
+        }
+        const trimmed = line.trim();
+        if (trimmed === "" || trimmed.startsWith("#"))
+            return;
+        if (trimmed.startsWith("[")) {
+            inTable = true;
+            problems.push(`${at}: Veil has no tables; ${trimmed.slice(0, 40)} and its keys are ignored`);
+            return;
+        }
+        const pair = /^([A-Za-z0-9_-]+)\s*=\s*(.*)$/.exec(trimmed);
+        if (!pair) {
+            problems.push(`${at}: not a key = value line; ignored`);
+            return;
+        }
+        const key = pair[1];
+        const raw = (_a = pair[2]) !== null && _a !== void 0 ? _a : "";
+        const quotes = (_b = /^("""|''')/.exec(raw)) === null || _b === void 0 ? void 0 : _b[1];
+        if (quotes) {
+            if (raw.indexOf(quotes, 3) < 0)
+                multiline = quotes;
+            if (!inTable)
+                problems.push(`${at}: ${key} is a multi-line string, which Veil does not read; ignored`);
+            return;
+        }
+        if (inTable)
+            return;
+        const value = tomlValue(raw);
+        if (value === undefined)
+            problems.push(`${at}: ${key} has a value Veil cannot read; ignored`);
+        else if (Object.prototype.hasOwnProperty.call(values, key))
+            problems.push(`${at}: ${key} is set twice; the first one is kept`);
+        else
+            values[key] = value;
+    });
+    return { values, problems };
+}
 export const BLANK_AFTER_MIN_S = 5;
 export const BLANK_AFTER_MAX_S = 3600;
 export const DEFAULTS = {
@@ -63,46 +275,43 @@ export const DEFAULTS = {
     brandingPath: "~/.config/omarchy/branding/about.txt",
     blankAfter: 30,
 };
-const TEXT_KEYS = ["displayName", "timeFormat", "dateFormat", "brandingPath"];
-const KNOWN_KEYS = new Set(["id", ...TEXT_KEYS, "blankAfter"]);
-function isRecord(value) {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-export function readSettings(configText, pluginId = PLUGIN_ID) {
-    const problems = [];
-    let config;
-    try {
-        config = JSON.parse(String(configText !== null && configText !== void 0 ? configText : ""));
-    }
-    catch (_a) {
-        return { settings: {}, problems: ["shell.json is not valid JSON; using the defaults"] };
-    }
-    const plugins = isRecord(config) ? config["plugins"] : undefined;
-    const entry = Array.isArray(plugins) ? plugins.find((item) => isRecord(item) && item["id"] === pluginId) : undefined;
-    if (!isRecord(entry))
-        return { settings: {}, problems };
+const TEXT_KEYS = {
+    display_name: "displayName",
+    time_format: "timeFormat",
+    date_format: "dateFormat",
+    branding_path: "brandingPath",
+};
+const KNOWN_KEYS = new Set([...Object.keys(TEXT_KEYS), "branding", "blank_after"]);
+export function readSettings(configText) {
+    const { values, problems } = parseToml(configText);
     const settings = {};
-    for (const key of Object.keys(entry)) {
+    for (const key of Object.keys(values)) {
         if (!KNOWN_KEYS.has(key))
             problems.push(`unknown setting "${key}" is ignored`);
     }
-    for (const key of TEXT_KEYS) {
-        const value = entry[key];
+    for (const [key, field] of Object.entries(TEXT_KEYS)) {
+        const value = values[key];
         if (value === undefined)
             continue;
         if (typeof value === "string" && value.trim().length > 0)
-            settings[key] = value;
+            settings[field] = value;
         else
             problems.push(`${key} must be a non-empty string; using the default`);
     }
-    const blankAfter = entry["blankAfter"];
+    const branding = values["branding"];
+    if (branding !== undefined) {
+        if (typeof branding === "boolean")
+            settings.branding = branding;
+        else
+            problems.push("branding must be true or false; using the default");
+    }
+    const blankAfter = values["blank_after"];
     if (blankAfter !== undefined) {
-        if (typeof blankAfter === "number" && Number.isInteger(blankAfter)
-            && blankAfter >= BLANK_AFTER_MIN_S && blankAfter <= BLANK_AFTER_MAX_S) {
+        if (typeof blankAfter === "number" && blankAfter >= BLANK_AFTER_MIN_S && blankAfter <= BLANK_AFTER_MAX_S) {
             settings.blankAfter = blankAfter;
         }
         else {
-            problems.push(`blankAfter must be a whole number of seconds from ${BLANK_AFTER_MIN_S} to ${BLANK_AFTER_MAX_S}; using the default`);
+            problems.push(`blank_after must be a whole number of seconds from ${BLANK_AFTER_MIN_S} to ${BLANK_AFTER_MAX_S}; using the default`);
         }
     }
     return { settings, problems };
@@ -115,16 +324,21 @@ export function expandHome(path, home) {
     return path.startsWith("~/") ? `${home}${path.slice(1)}` : path;
 }
 export function resolveSettings(settings, env) {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d, _e, _f;
     const chosen = settings !== null && settings !== void 0 ? settings : {};
+    const bar = splitClockFormat(env.clockFormat);
     return {
-        displayName: (_a = chosen.displayName) !== null && _a !== void 0 ? _a : displayName(env.user),
-        timeFormat: (_b = chosen.timeFormat) !== null && _b !== void 0 ? _b : DEFAULTS.timeFormat,
-        dateFormat: (_c = chosen.dateFormat) !== null && _c !== void 0 ? _c : DEFAULTS.dateFormat,
+        displayName: (_a = chosen.displayName) !== null && _a !== void 0 ? _a : (env.fullName || displayName(env.user)),
+        timeFormat: (_b = chosen.timeFormat) !== null && _b !== void 0 ? _b : (bar.time || DEFAULTS.timeFormat),
+        dateFormat: (_c = chosen.dateFormat) !== null && _c !== void 0 ? _c : (bar.date || DEFAULTS.dateFormat),
         brandingPath: expandHome((_d = chosen.brandingPath) !== null && _d !== void 0 ? _d : DEFAULTS.brandingPath, env.home),
-        blankAfterMs: ((_e = chosen.blankAfter) !== null && _e !== void 0 ? _e : DEFAULTS.blankAfter) * 1000,
+        showBranding: (_e = chosen.branding) !== null && _e !== void 0 ? _e : true,
+        blankAfterMs: ((_f = chosen.blankAfter) !== null && _f !== void 0 ? _f : DEFAULTS.blankAfter) * 1000,
     };
 }
 export function configPath(xdgConfigHome, home) {
+    return `${xdgConfigHome || `${home !== null && home !== void 0 ? home : ""}/.config`}/veil/config.toml`;
+}
+export function shellConfigPath(xdgConfigHome, home) {
     return `${xdgConfigHome || `${home !== null && home !== void 0 ? home : ""}/.config`}/omarchy/shell.json`;
 }

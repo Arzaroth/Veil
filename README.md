@@ -52,33 +52,42 @@ If the lock ever misbehaves, switch to a TTY (`Ctrl+Alt+F2`) and run
 
 ## Configuration
 
-Settings go on Veil's entry in `~/.config/omarchy/shell.json`, the one the
-install script adds to `plugins`. Changes apply as soon as the file is saved.
+Settings live in `~/.config/veil/config.toml` (`$XDG_CONFIG_HOME/veil/` when
+set). Create it when you want to change something; changes apply as soon as
+the file is saved, even on an open lock screen.
 
-```json
-"plugins": [
-  {
-    "id": "arzaroth.veil",
-    "displayName": "Arzaroth",
-    "timeFormat": "HH:mm",
-    "dateFormat": "dddd d MMMM",
-    "brandingPath": "~/.config/omarchy/branding/about.txt",
-    "blankAfter": 30
-  }
-]
+```toml
+display_name = "Arzaroth"
+time_format = "HH:mm"
+date_format = "dddd d MMMM"
+branding = true
+branding_path = "~/.config/omarchy/branding/about.txt"
+blank_after = 30
 ```
 
 | Key | Default | |
 | --- | --- | --- |
-| `displayName` | your login, capitalized | the name above the field |
-| `timeFormat` | `HH:mm` | Qt date format |
-| `dateFormat` | `dddd d MMMM` | Qt date format, in your locale |
-| `brandingPath` | `~/.config/omarchy/branding/about.txt` | text art at the bottom; missing or empty shows the Omarchy wordmark |
-| `blankAfter` | `30` | seconds without input before the screens blank, 5 to 3600 |
+| `display_name` | your full name from `/etc/passwd`, else your login capitalized | the name above the field |
+| `time_format` | the bar clock's time, else `HH:mm` | Qt date format |
+| `date_format` | the bar clock's date, else `dddd d MMMM` | Qt date format, in your locale; `ww` is the ISO week |
+| `branding` | `true` | `false` hides the art and the Omarchy wordmark |
+| `branding_path` | `~/.config/omarchy/branding/about.txt` | text art at the bottom; point it at your own file to replace Omarchy's. Missing or empty shows the Omarchy wordmark |
+| `blank_after` | `30` | seconds without input before the screens blank, 5 to 3600 |
 
-Every key is optional. A value of the wrong type, or a key Veil does not know,
-is ignored with a warning in `journalctl --user` (`veil: ...`). Disabling the
-plugin with `omarchy plugin disable` removes its entry, settings included.
+Without `time_format` and `date_format`, the lock follows the bar clock's
+format (the one right-click cycles through): `ddd d MMM h:mm AP` gives a
+`h:mm AP` clock over `ddd d MMM`. Seconds are left out. The date is taken only
+when the bar shows a day and a month, so the stock `dddd HH:mm` keeps Veil's
+`dddd d MMMM`.
+
+Every key is optional. A value of the wrong type, a key Veil does not know or
+a line it cannot read is ignored with a warning in `journalctl --user`
+(`veil: ...`). Veil reads flat `key = value` lines only: no tables, arrays or
+multi-line strings. A file created while the shell runs applies from the next
+lock.
+
+Coming from 0.1.0: settings on Veil's entry in `~/.config/omarchy/shell.json`
+are no longer read, and the journal says which ones to move.
 
 ## How it works
 
