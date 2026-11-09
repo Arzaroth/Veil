@@ -41,7 +41,9 @@ the snapshots are cleared.
 
 ## Settings
 
-A `FileView` watches `configPath` (`shell.json`); each load goes through
+A `FileView` (`settingsFile`) watches `configPath`
+(`~/.config/veil/config.toml`), and `settingsRetryTimer` reloads it every 5 s
+while it is missing; each load goes through
 `Model.readSettings` (problems logged as `veil: ...`) into `settingsRead`, and
 `settings` is `Model.resolveSettings` of it with the user and home. Both the
 lock surfaces' views and the preview get `settings`. See

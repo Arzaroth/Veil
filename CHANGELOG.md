@@ -9,9 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `"branding": false` in Veil's settings hides the art at the bottom, and the
-  Omarchy wordmark with it. To show your own art instead of Omarchy's, point
-  `brandingPath` at it.
+- `branding = false` hides the art at the bottom, and the Omarchy wordmark
+  with it. To show your own art instead of Omarchy's, point `branding_path`
+  at it.
+
+### Changed
+
+- Settings moved from Veil's entry in `~/.config/omarchy/shell.json` to
+  Veil's own `~/.config/veil/config.toml`, with snake_case keys:
+  `display_name`, `time_format`, `date_format`, `branding_path`,
+  `blank_after`. `shell.json` is no longer read, so copy any settings you had
+  there into the new file. Disabling the plugin no longer forgets them.
 
 ## [0.1.0] - 2026-11-05
 

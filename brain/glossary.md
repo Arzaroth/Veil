@@ -23,9 +23,9 @@
   without input. Avoid: DPMS (the mechanism, not the feature), sleep.
 - **Ink** - `LockView.ink`, the theme's lock text colour tinted 60% towards
   white, used for the clock, date, name, info line and art.
-- **Branding art** - the text art at the bottom, read from `brandingPath`.
-  Off with `"branding": false`.
+- **Branding art** - the text art at the bottom, read from `branding_path`.
+  Off with `branding = false`.
   Avoid: logo (that is the wordmark fallback).
-- **Settings** - the keys on Veil's `plugins[]` entry in `shell.json`, read
-  by `Model.readSettings`. See [features/settings.md](features/settings.md).
-  Avoid: config (that is the whole `shell.json`), options, preferences.
+- **Settings** - the keys in `~/.config/veil/config.toml`, read by
+  `Model.readSettings`. See [features/settings.md](features/settings.md).
+  Avoid: options, preferences.

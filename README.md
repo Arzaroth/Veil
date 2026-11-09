@@ -52,35 +52,32 @@ If the lock ever misbehaves, switch to a TTY (`Ctrl+Alt+F2`) and run
 
 ## Configuration
 
-Settings go on Veil's entry in `~/.config/omarchy/shell.json`, the one the
-install script adds to `plugins`. Changes apply as soon as the file is saved.
+Settings live in `~/.config/veil/config.toml` (`$XDG_CONFIG_HOME/veil/` when
+set). Create it when you want to change something; changes apply as soon as
+the file is saved, even on an open lock screen.
 
-```json
-"plugins": [
-  {
-    "id": "arzaroth.veil",
-    "displayName": "Arzaroth",
-    "timeFormat": "HH:mm",
-    "dateFormat": "dddd d MMMM",
-    "brandingPath": "~/.config/omarchy/branding/about.txt",
-    "branding": true,
-    "blankAfter": 30
-  }
-]
+```toml
+display_name = "Arzaroth"
+time_format = "HH:mm"
+date_format = "dddd d MMMM"
+branding = true
+branding_path = "~/.config/omarchy/branding/about.txt"
+blank_after = 30
 ```
 
 | Key | Default | |
 | --- | --- | --- |
-| `displayName` | your login, capitalized | the name above the field |
-| `timeFormat` | `HH:mm` | Qt date format |
-| `dateFormat` | `dddd d MMMM` | Qt date format, in your locale |
-| `brandingPath` | `~/.config/omarchy/branding/about.txt` | text art at the bottom; point it at your own file to replace Omarchy's. Missing or empty shows the Omarchy wordmark |
+| `display_name` | your login, capitalized | the name above the field |
+| `time_format` | `HH:mm` | Qt date format |
+| `date_format` | `dddd d MMMM` | Qt date format, in your locale |
 | `branding` | `true` | `false` hides the art and the Omarchy wordmark |
-| `blankAfter` | `30` | seconds without input before the screens blank, 5 to 3600 |
+| `branding_path` | `~/.config/omarchy/branding/about.txt` | text art at the bottom; point it at your own file to replace Omarchy's. Missing or empty shows the Omarchy wordmark |
+| `blank_after` | `30` | seconds without input before the screens blank, 5 to 3600 |
 
-Every key is optional. A value of the wrong type, or a key Veil does not know,
-is ignored with a warning in `journalctl --user` (`veil: ...`). Disabling the
-plugin with `omarchy plugin disable` removes its entry, settings included.
+Every key is optional. A value of the wrong type, a key Veil does not know or
+a line it cannot read is ignored with a warning in `journalctl --user`
+(`veil: ...`). Veil reads flat `key = value` lines only: no tables, arrays or
+multi-line strings.
 
 ## How it works
 
